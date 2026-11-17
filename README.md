@@ -24,6 +24,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Searchable instrument watchlist and timeframe selector.
 - [x] Resizable chart container and responsive chart rendering.
 - [x] Public Binance USDⓈ-M Futures REST history and WebSocket kline adapter (no credentials/order endpoints).
+- [x] Incremental live candle updates use series-level last-bar updates when timestamps remain stable; structural history changes reset the series.
 - [x] Historical candle retrieval with bounded pagination.
 - [ ] Correct exchange timestamps and timezone controls.
 - [x] Connection status, exponential reconnect/backoff and stale-feed detection.
@@ -51,7 +52,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Rectangle resizing through endpoint handles; channel centerline endpoint editing.
 - [x] Drawing lock and hide/show controls.
 - [x] Bring-forward/send-backward layer ordering controls in the object tree.
-- [x] Shift-click multi-select and group movement for unlocked drawings.
+- [x] Shift-click multi-select and group movement for unlocked drawings; grouped moves commit as one undoable change.
+- [x] Pointer cancellation discards in-progress drawings and drag edits without committing partial work.
 - [ ] Keyboard shortcuts and escape/cancel behavior.
 - [x] IndexedDB persistence with schema versioning and localStorage fallback.
 - [ ] Storage migration recovery, backup/restore and corruption diagnostics.
@@ -100,7 +102,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ## Current implementation and data limitations
 
-The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, close-line and area display modes, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. The main chart includes a configurable overlay manager supporting multiple SMA, EMA and cumulative VWAP instances, each with independent period (where applicable), visibility and color settings. Main-chart zoom in/out adjusts the visible logical range, while Fit restores the full loaded history. It includes paginated public exchange history, a reconnecting WebSocket market-data adapter with stale-feed detection and illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, geometry-aware drawing selection, multi-select/group movement, endpoint editing, ray/extended-line/horizontal-ray tools, labeled Fibonacci retracements and three-anchor extensions, price-range, date/time and inclusive bar-count measurements with elapsed-time labels, editable annotation text and line styles, layer ordering, style editing and undo/redo, replay controls, complete workspace JSON export, named workspace save/restore/rename/duplicate/delete, and inspector/object-tree controls.
+The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, close-line and area display modes, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. The main chart includes a configurable overlay manager supporting multiple SMA, EMA and cumulative VWAP instances, each with independent period (where applicable), visibility and color settings. Main-chart zoom in/out adjusts the visible logical range, while Fit restores the full loaded history. It includes paginated public exchange history, a reconnecting WebSocket market-data adapter with stale-feed detection and illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, geometry-aware drawing selection, multi-select/group movement with single-step undo, safe pointer cancellation, endpoint editing, ray/extended-line/horizontal-ray tools, labeled Fibonacci retracements and three-anchor extensions, price-range, date/time and inclusive bar-count measurements with elapsed-time labels, editable annotation text and line styles, layer ordering, style editing and undo/redo, replay controls, complete workspace JSON export, named workspace save/restore/rename/duplicate/delete, and inspector/object-tree controls.
 
 **Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded historical exchange bars when available, with speed selection, single-bar stepping and timeline scrubbing; otherwise it uses the local illustrative series. No order-entry or broker functionality is included.
 
