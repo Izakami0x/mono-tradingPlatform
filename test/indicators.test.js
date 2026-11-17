@@ -36,3 +36,10 @@ test('latest SMA calculation matches the final full-series value',()=>{
   assert.deepEqual(latest,full.at(-1));
   assert.equal(calculateLatestSMAValue(input.slice(0,2),{period:4}),null);
 });
+
+test('latest SMA remains correct on a 50k-bar history',()=>{
+  const input=Array.from({length:50000},(_,index)=>({time:1700000000+index*60,open:index,high:index+1,low:index-1,close:index,volume:10}));
+  const latest=calculateLatestSMAValue(input,{period:50});
+  assert.equal(latest.time,input.at(-1).time);
+  assert.equal(latest.value,49974.5);
+});
