@@ -78,6 +78,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ### Quality and release
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
+- [x] Unit tests for SMA, EMA and session-based VWAP calculations.
 - [x] GitHub Actions dependency install, unit-test and production-build workflow.
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
