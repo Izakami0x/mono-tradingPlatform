@@ -7,18 +7,47 @@ const TFS=['1m','3m','5m','15m','30m','1h','2h','4h','1D','1W','1M'], STORE='mon
 const fmt=(v,p=2)=>v.toLocaleString('en-US',{minimumFractionDigits:p,maximumFractionDigits:p});
 function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 
-function Chart({symbol,tf,tool,drawings,onDraw,volume,ma,count,selected,onSelect}){const svg=React.useRef(null),[hover,H]=useState(null),[draft,D]=useState(null),bars=useMemo(()=>barsFor(symbol),[symbol]).slice(0,count),lo=Math.min(...bars.map(b=>b.low))-2,hi=Math.max(...bars.map(b=>b.high))+2,W=1000,PH=volume?475:520;
-const x=i=>10+i*928/Math.max(1,bars.length-1),y=v=>15+(hi-v)/(hi-lo)*(PH-15),point=e=>{let r=svg.current.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W,py=(e.clientY-r.top)/r.height*550;return{x:px,y:py,p:hi-(py-15)/(PH-15)*(hi-lo)}};
-const down=e=>{if(['cursor','crosshair'].includes(tool))return;let p=point(e);D({a:p,b:p});e.currentTarget.setPointerCapture?.(e.pointerId)},move=e=>{let p=point(e);H(p);if(draft)D({...draft,b:p})},up=e=>{if(!draft)return;let p=point(e),d={id:Date.now()+Math.random(),type:tool,x1:draft.a.x/1000,y1:draft.a.y/550,x2:p.x/1000,y2:p.y/550,color:'#35c9dc',text:'Note'};onDraw(d);D(null)};
-return <div className="chart-canvas"><svg ref={svg} viewBox="0 0 1000 550" preserveAspectRatio="none" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={()=>H(null)} className={tool==='cursor'?'cursor-tool':'drawing-tool'}>
-{Array.from({length:9},(_,i)=><g key={i}><line className="grid-line" x1="10" x2="938" y1={15+i*(PH-15)/8} y2={15+i*(PH-15)/8}/><text className="axis-label" x="947" y={19+i*(PH-15)/8}>{(hi-i*(hi-lo)/8).toFixed(2)}</text></g>)}
-{Array.from({length:9},(_,i)=><line key={'v'+i} className="grid-line" x1={10+i*116} x2={10+i*116} y1="15" y2={PH}/>)}
-{bars.map((b,i)=>{let xx=x(i),up=b.close>=b.open,c=up?'#16c7a0':'#f05b78';return <g key={i}><line x1={xx} x2={xx} y1={y(high)} y2={y(low)} stroke={c}/><rect x={xx-3} y={Math.min(y(open),y(close))} width="6" height={Math.max(1.5,Math.abs(y(open)-y(close)))} fill={c}/>{volume&&<rect x={xx-3} y={PH+5+(550-PH-25)*(1-b.volume/210)} width="6" height={(550-PH-25)*volume/210} fill={c} opacity=".4"/>}</g>})}
-{ma&&<polyline fill="none" stroke="#d9b36c" strokeWidth="1.5" points={bars.map((b,i)=>i>8?x(i)+','+y(bars.slice(i-8,i+1).reduce((a,z)=>a+z.close,0)/9):'').filter(Boolean).join(' ')}/>}
-{drawings.map(d=>{let x1=d.x1*W,y1=d.y1*550,x2=d.x2*W,y2=d.y2*550,props={stroke:d.color,strokeWidth:selected===d.id?2.5:1.5};return d.type==='horizontal'?<line key={d.id} {...props} x1="10" x2="938" y1={y1} y2={y1}/>:d.type==='rectangle'?<rect key={d.id} {...props} x={Math.min(x1,x2)} y={Math.min(y1,y2)} width={Math.max(2,Math.abs(x2-x1))} height={Math.max(2,Math.abs(y2-y1))} fill={d.color} fillOpacity=".08"/>:<line key={d.id} {...props} x1={x1} y1={y1} x2={x2} y2={y2}/>})}
-{draft&&<line x1={draft.a.x} y1={draft.a.y} x2={draft.b.x} y2={draft.b.y} stroke="#35c9dc" strokeDasharray="4 3"/>}
-{hover&&tool==='crosshair'&&<g pointerEvents="none"><line x1={hover.x} x2={hover.x} y1="15" y2="530" stroke="#8ba5ba" strokeDasharray="3 4"/><line x1="10" x2="938" y1={hover.y} y2={hover.y} stroke="#8ba5ba" strokeDasharray="3 4"/></g>}
-</svg><div className="chart-watermark">{symbol}<span> · </span>{tf}</div><div className="chart-ohlc">O {bars.at(-1)?.o.toFixed(2)}　H {bars.at(-1)?.h.toFixed(2)}　L {bars.at(-1)?.l.toFixed(2)}　C {bars.at(-1)?.c.toFixed(2)}</div></div>}
+import {createChart,CandlestickSeries,HistogramSeries,LineSeries,CrosshairMode,ColorType} from 'lightweight-charts';
+function Chart({symbol,tf,tool,drawings,onDraw,volume,ma,count,selected,onSelect}){
+  const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null);
+  const [draft,D]=useState(null), [cursor,C]=useState(null);
+  const bars=useMemo(()=>barsFor(symbol,150).slice(0,count),[symbol,count]);
+  const times=useMemo(()=>bars.map((bar,index)=>({...bar,time:1700000000+index*60})),[bars]);
+  useEffect(()=>{
+    if(!host.current)return;
+    const chart=createChart(host.current,{
+      width:host.current.clientWidth,height:host.current.clientHeight,
+      layout:{background:{type:ColorType.Solid,color:'#08131f'},textColor:'#7890a5',fontFamily:'Inter, sans-serif',fontSize:11},
+      grid:{vertLines:{color:'rgba(54,82,105,.28)'},horzLines:{color:'rgba(54,82,105,.28)'}},
+      rightPriceScale:{borderColor:'#1d3448',scaleMargins:{top:.08,bottom:volume?.22:.08}},
+      timeScale:{borderColor:'#1d3448',timeVisible:true,secondsVisible:false},
+      crosshair:{mode:CrosshairMode.Normal,vertLine:{color:'#7890a5',style:2},horzLine:{color:'#7890a5',style:2}}
+    });
+    const candles=chart.addSeries(CandlestickSeries,{upColor:'#16c7a0',downColor:'#f05b78',borderUpColor:'#16c7a0',borderDownColor:'#f05b78',wickUpColor:'#16c7a0',wickDownColor:'#f05b78'});
+    const vols=chart.addSeries(HistogramSeries,{priceScaleId:'volume',priceFormat:{type:'volume'},lastValueVisible:false,priceLineVisible:false});
+    chart.priceScale('volume').applyOptions({scaleMargins:{top:.82,bottom:0},borderVisible:false});
+    const average=chart.addSeries(LineSeries,{color:'#d9b36c',lineWidth:2,priceLineVisible:false,lastValueVisible:false});
+    candleRef.current=candles;volumeRef.current=vols;maRef.current=average;chartRef.current=chart;
+    const observer=new ResizeObserver(entries=>{const box=entries[0]?.contentRect;if(box)chart.applyOptions({width:Math.max(320,Math.floor(box.width)),height:Math.max(220,Math.floor(box.height))})});
+    observer.observe(host.current);
+    return()=>{observer.disconnect();chart.remove();chartRef.current=null};
+  },[]);
+  useEffect(()=>{
+    if(!candleRef.current)return;
+    candleRef.current.setData(times.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close})));
+    volumeRef.current.setData(volume?times.map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'rgba(22,199,160,.38)':'rgba(240,91,120,.38)'})):[]);
+    const points=times.map((b,i)=>i>=8?({time:b.time,value:times.slice(i-8,i+1).reduce((sum,v)=>sum+v.close,0)/9}):null).filter(Boolean);
+    maRef.current.setData(ma?points:[]);
+    chartRef.current?.timeScale().fitContent();
+  },[times,volume,ma]);
+  const drawStart=e=>{if(['cursor','crosshair'].includes(tool))return;const rect=e.currentTarget.getBoundingClientRect();const p={x:(e.clientX-rect.left)/rect.width*1000,y:(e.clientY-rect.top)/rect.height*550};D({a:p,b:p});e.currentTarget.setPointerCapture?.(e.pointerId)};
+  const drawMove=e=>{const rect=e.currentTarget.getBoundingClientRect();const p={x:(e.clientX-rect.left)/rect.width*1000,y:(e.clientY-rect.top)/rect.height*550};C(p);if(draft)D({...draft,b:p})};
+  const drawEnd=e=>{if(!draft)return;const rect=e.currentTarget.getBoundingClientRect(),p={x:(e.clientX-rect.left)/rect.width*1000,y:(e.clientY-rect.top)/rect.height*550};onDraw({id:Date.now()+Math.random(),type:tool,x1:draft.a.x/1000,y1:draft.a.y/550,x2:p.x/1000,y2:p.y/550,color:'#35c9dc',text:'Note'});D(null)};
+  return <div className="chart-canvas"><div ref={host} className="chart-engine"/><svg className={'drawing-overlay '+(tool==='cursor'?'cursor-tool':'drawing-tool')} viewBox="0 0 1000 550" preserveAspectRatio="none" onPointerDown={drawStart} onPointerMove={drawMove} onPointerUp={drawEnd}>
+    {drawings.map(d=>{const x1=d.x1*1000,y1=d.y1*550,x2=d.x2*1000,y2=d.y2*550,props={stroke:d.color,strokeWidth:selected===d.id?2.5:1.5};return d.type==='horizontal'?<line key={d.id} {...props} x1="0" x2="1000" y1={y1} y2={y1}/>:d.type==='rectangle'?<rect key={d.id} {...props} x={Math.min(x1,x2)} y={Math.min(y1,y2)} width={Math.max(2,Math.abs(x2-x1))} height={Math.max(2,Math.abs(y2-y1))} fill={d.color} fillOpacity=".08"/>:<line key={d.id} {...props} x1={x1} y1={y1} x2={x2} y2={y2}/>})}
+    {draft&&<line x1={draft.a.x} y1={draft.a.y} x2={draft.b.x} y2={draft.b.y} stroke="#35c9dc" strokeDasharray="4 3"/>}
+  </svg><div className="chart-watermark">{symbol}<span> · </span>{tf}</div><div className="chart-ohlc">Professional chart engine · {count} bars</div></div>
+}
 export default function App(){
 const prefs=load(STORE,{}),[symbol,S]=useState(prefs.symbol||'BTCUSDT'),[tf,T]=useState(prefs.tf||'15m'),[tool,Tool]=useState('cursor'),[watch,W]=useState(prefs.watch??true),[watchHidden,WH]=useState(false),[inspector,I]=useState(prefs.inspector??true),[floating,F]=useState(false),[search,Q]=useState(''),[volume,V]=useState(prefs.volume??true),[ma,MA]=useState(false),[tab,Tab]=useState('Object tree'),[layout,Layout]=useState(1),[count,C]=useState(110),[replay,R]=useState(false),[playing,P]=useState(false),[selected,Select]=useState(null),[notice,N]=useState('Workspace ready'),[drawings,D]=useState(()=>load('mono.drawings.'+(prefs.symbol||'BTCUSDT'),[]));
 const instrument=SYMBOLS.find(s=>s.symbol===symbol)||SYMBOLS[0],filtered=SYMBOLS.filter(s=>(s.symbol+s.name).toLowerCase().includes(search.toLowerCase()));
