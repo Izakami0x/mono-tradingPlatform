@@ -41,7 +41,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const area=chart.addSeries(AreaSeries,{lineColor:'#35c9dc',topColor:'rgba(53,201,220,.30)',bottomColor:'rgba(53,201,220,.015)',lineWidth:2,priceLineVisible:false,lastValueVisible:false});
     const average=chart.addSeries(LineSeries,{color:'#d9b36c',lineWidth:2,priceLineVisible:false,lastValueVisible:false});
     candleRef.current=candles;lineRef.current=line;areaRef.current=area;volumeRef.current=vols;maRef.current=average;chartRef.current=chart;
-    const observer=new ResizeObserver(entries=>{const box=entries[0]?.contentRect;if(box)chart.applyOptions({width:Math.max(320,Math.floor(box.width)),height:Math.max(220,Math.floor(box.height))})});
+    const observer=new ResizeObserver(entries=>{const box=entries[0]?.contentRect;if(box){chart.applyOptions({width:Math.max(320,Math.floor(box.width)),height:Math.max(220,Math.floor(box.height))});Tick(v=>v+1)}});
     observer.observe(host.current);
     const redraw=()=>Tick(v=>v+1);
     const crosshairMove=param=>{if(!syncingCrosshair.current&&param.time!=null)onCrosshairRef.current?.({origin:paneId,time:param.time});};
