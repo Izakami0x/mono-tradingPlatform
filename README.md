@@ -60,7 +60,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Optional linked symbol selection across chart panes.
 - [x] Optional linked timeframe selection across chart panes.
 - [x] Synchronized crosshair time across panes when matching candle timestamps are available.
-- [ ] Synchronized visible time-range/zoom and scroll across panes.
+- [x] Optional synchronized visible time-range and horizontal scrolling across panes (time-based; requires overlapping time data).
 - [ ] Functional zoom, fit-content and chart-type controls.
 - [ ] Indicator configuration and multiple indicator instances.
 - [ ] Distraction-free/full-screen chart mode.
@@ -90,7 +90,7 @@ The frontend uses React, Vite, and TradingView's open-source Lightweight Charts 
 
 **Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded historical exchange bars when available, with speed selection, single-bar stepping and timeline scrubbing; otherwise it uses the local illustrative series. No order-entry or broker functionality is included.
 
-Crosshair synchronization is time-based: when panes have different intervals or missing candle timestamps, a corresponding crosshair may not be available in every pane. Visible-range/zoom synchronization remains planned.
+Crosshair synchronization is time-based: when panes have different intervals or missing candle timestamps, a corresponding crosshair may not be available in every pane. Visible-range synchronization is available as a separate optional link; panes need overlapping time data for the same visible interval to render meaningfully.
 
 Some controls and roadmap items remain incomplete. The checklist above distinguishes working functionality from planned work.
 
