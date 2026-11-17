@@ -64,9 +64,9 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [ ] Workspace save, rename, duplicate and restore.
 
 ### Replay and analysis
-- [x] Local illustrative-bar replay controls.
-- [ ] Historical-data replay with deterministic stepping.
-- [ ] Replay speed, step forward/back and jump controls.
+- [x] Replay controls over loaded exchange history or demo fallback.
+- [x] Historical-data replay with deterministic stepping.
+- [x] Replay speed, step forward/back and timeline jump controls.
 - [ ] Persisted replay position and replay session state.
 - [ ] Alert rules backed by a live data source.
 - [ ] Additional practical technical-analysis tools and annotations.
@@ -85,7 +85,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes paginated public exchange history, a reconnecting WebSocket market-data adapter with stale-feed detection and illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, basic drawing selection/movement/style editing and undo/redo, replay controls, workspace export, and inspector/object-tree controls.
 
-**Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded bar series. No order-entry or broker functionality is included.
+**Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded historical exchange bars when available, with speed selection, single-bar stepping and timeline scrubbing; otherwise it uses the local illustrative series. No order-entry or broker functionality is included.
 
 Some controls and roadmap items remain incomplete. The checklist above distinguishes working functionality from planned work.
 
