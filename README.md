@@ -65,7 +65,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Fit-to-data control for all currently loaded bars.
 - [x] Candlestick, close-line and area chart display modes (main chart).
 - [x] Indicator manager with independently configurable, multiple SMA, EMA and VWAP instances (period, visibility and color; main chart overlays).
-- [ ] Distraction-free/full-screen chart mode.
+- [x] Distraction-free/full-screen chart mode for the complete chart workspace, with browser fullscreen state tracking and an exit control.
 - [x] Named workspaces: save new, overwrite current, rename, duplicate, delete and restore.
 - [x] Workspace snapshots include main chart settings, indicators, drawings, linked-chart preferences, layout, and saved secondary-pane symbols/timeframes/drawings.
 - [x] Active named workspace selection and workspace library persist locally across reloads.
