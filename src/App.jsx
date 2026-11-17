@@ -4,6 +4,7 @@ import {readLocalRecord,writeLocalRecord} from './core/persistence.js';
 import {fetchHistoricalKlines,subscribeFuturesKlines} from './core/binanceMarketData.js';
 import {calculateIndicatorValues,calculateLatestSMAValue} from './core/indicators.js';
 import {FIB_LEVELS,FIB_EXTENSION_LEVELS,calculateFibExtension,rayToBounds,measureRange,formatElapsedTime} from './core/drawingGeometry.js';
+import {buildDrawingHitIndex,queryDrawingHitIndex} from './core/drawingHitIndex.js';
 import {classifyBarUpdate} from './core/chartData.js';
 import {Activity,AlignLeft,Bell,Bookmark,CandlestickChart,Check,ChevronDown,ChevronLeft,ChevronRight,CircleHelp,Crosshair,Download,Eye,FileText,Grid2X2,Layers,Maximize2,Minus,MoreHorizontal,PanelRightClose,PanelRightOpen,Plus,Search,Settings2,SlidersHorizontal,Square,Star,TrendingUp,Trash2,Undo2,Waves,X,ZoomIn,ZoomOut,Play,Pause,RotateCcw,Clock3,LayoutDashboard,MousePointer2,Pencil} from 'lucide-react';
 const SYMBOLS=[['BTCUSDT','Bitcoin / Tether',96482.4,2.41,2],['ETHUSDT','Ethereum / Tether',3284.16,1.08,2],['SOLUSDT','Solana / Tether',184.72,-.64,2],['BNBUSDT','BNB / Tether',642.8,.32,2],['XRPUSDT','XRP / Tether',2.1846,-1.24,4],['DOGEUSDT','Dogecoin / Tether',.2468,3.82,4],['AVAXUSDT','Avalanche / Tether',36.92,-.18,2],['LINKUSDT','Chainlink / Tether',18.43,.76,2],['ADAUSDT','Cardano / Tether',.7124,1.62,4],['SUIUSDT','Sui / Tether',3.482,-2.03,3]].map(([symbol,name,price,change,precision])=>({symbol,name,price,change,precision}));
@@ -88,6 +89,17 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const x=chart.timeScale().timeToCoordinate(p.time),y=series.priceToCoordinate(p.price);
     return x==null||y==null?null:{x,y};
   };
+  const hitIndex=useMemo(()=>buildDrawingHitIndex(visibleDrawings,d=>{
+    const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});
+    if(!a||!b)return null;
+    const width=host.current?.clientWidth||1000,height=host.current?.clientHeight||600;
+    if(['ray','extended','horizontal','horizontalRay'].includes(d.type))return d.type==='horizontal'||d.type==='horizontalRay'?{left:0,right:width,top:a.y-10,bottom:a.y+10}:{left:0,right:width,top:0,bottom:height};
+    const points=[a,b];
+    if(d.type==='fibExt'&&d.t3!=null){const c=xyFor({time:d.t3,price:d.p3});if(c)points.push(c);}
+    if(d.type==='brush'&&d.points)for(const point of d.points){const p=xyFor(point);if(p)points.push(p);}
+    const pad=d.type==='channel'?105: d.type==='fib'||d.type==='fibExt'?12:24;
+    return {left:Math.min(...points.map(p=>p.x))-pad,right:Math.max(...points.map(p=>p.x))+pad,top:Math.min(...points.map(p=>p.y))-pad,bottom:Math.max(...points.map(p=>p.y))+pad};
+  }),[visibleDrawings,tick,times]);
   const distanceToSegment=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;if(!len)return Math.hypot(p.x-a.x,p.y-a.y);const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))};
   const hitTest=(d,local)=>{
     if(d.hidden)return null;
@@ -115,7 +127,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     if(tool==='fibExt'&&draft?.stage===2){D(v=>({...v,c:p,stage:3}));e.currentTarget.setPointerCapture(e.pointerId);return;}
     if(tool==='cursor'){
       const rect=e.currentTarget.getBoundingClientRect(),local={x:e.clientX-rect.left,y:e.clientY-rect.top};
-      const hit=[...drawings].reverse().map(d=>({drawing:d,mode:hitTest(d,local)})).find(item=>item.mode);
+      const hit=queryDrawingHitIndex(hitIndex,local.x,local.y,12).map(d=>({drawing:d,mode:hitTest(d,local)})).find(item=>item.mode);
       if(hit){
         const id=hit.drawing.id;
         let ids=multiSelected;
