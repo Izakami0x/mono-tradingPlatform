@@ -94,8 +94,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] GitHub Actions dependency install, safe npm audit remediation, actionable high/critical audit gate, unit tests and production build.
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
-- [ ] Performance profiling with large candle histories and many drawings.
-- [ ] Incremental EMA/VWAP recalculation and large-history performance benchmark.
+- [x] 50k-candle SMA correctness regression test and informational SMA/EMA/VWAP benchmark in CI.
+- [ ] Performance profiling with many drawings and incremental EMA/VWAP recalculation.
 - [ ] Error boundaries, diagnostics and import/export validation.
 - [ ] Windows install/launch package and user documentation.
 - [ ] Release checklist and verified downloadable build.
@@ -126,6 +126,7 @@ npm run dev
 ```bash
 npm test
 npm run build
+npm run benchmark
 ```
 
 GitHub Actions runs unit tests and the production build on pushes and pull requests to `main`.
