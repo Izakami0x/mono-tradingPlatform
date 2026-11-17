@@ -5,3 +5,21 @@
 .drawing-overlay.selection-tool{pointer-events:auto;cursor:default;touch-action:none}.drawing-overlay.cursor-tool{pointer-events:none}
 
 .drawing-handles circle{fill:#08131f;stroke:#35c9dc;stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}.object-row{display:flex;align-items:center;gap:5px;padding:4px 0 4px 22px!important}.object-row .object-name{flex:1;text-align:left;color:inherit;font-size:10px}.object-row>button:not(.object-name){padding:2px 5px;color:#6f9eb1;font-size:9px}.object-row.object-selected{background:#10283a}.drawing-overlay.selection-tool{cursor:default}
+
+.chart-layout.layout-2,.chart-layout.layout-4{display:grid;min-height:0;min-width:0;gap:1px;background:#20384b;overflow:hidden}
+.chart-layout.layout-2{grid-template-columns:38px repeat(2,minmax(0,1fr));grid-template-rows:minmax(0,1fr)}
+.chart-layout.layout-4{grid-template-columns:38px repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.chart-layout.layout-2>.drawing-rail,.chart-layout.layout-4>.drawing-rail{grid-column:1;grid-row:1 / span 2}
+.chart-layout.layout-2>.chart-column{grid-column:2;grid-row:1}
+.chart-layout.layout-4>.chart-column{grid-column:2;grid-row:1}
+.secondary-pane{min-width:0;min-height:0;display:flex;flex-direction:column;background:#08131f;overflow:hidden}
+.secondary-pane-head{height:29px;flex:none;display:flex;align-items:center;gap:6px;padding:0 7px;background:#0b1927;border-bottom:1px solid #1d3448}
+.secondary-pane-head select{max-width:44%;min-width:0;background:#102438;border:1px solid #203b52;border-radius:3px;color:#c7d8e5;padding:3px 5px;font:9px 'DM Mono'}
+.secondary-pane-head span{margin-left:auto;font:8px 'DM Mono'}
+.secondary-pane-chart{flex:1;min-height:0;display:flex}
+.secondary-pane-chart>.chart-canvas{min-height:0}
+.layout-2>.secondary-pane{grid-column:3;grid-row:1}
+.layout-4>.secondary-pane:nth-of-type(1){grid-column:3;grid-row:1}
+.layout-4>.secondary-pane:nth-of-type(2){grid-column:2;grid-row:2}
+.layout-4>.secondary-pane:nth-of-type(3){grid-column:3;grid-row:2}
+@media(max-width:900px){.chart-layout.layout-4{grid-template-columns:38px repeat(2,minmax(0,1fr))}.secondary-pane-head select{font-size:8px}}
