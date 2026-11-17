@@ -57,7 +57,10 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Workspace JSON export.
 - [x] Real independent multi-chart panes (2/4/6/8 layouts); each layout renders separate charts.
 - [x] Per-pane symbol, timeframe, overlays and drawing state (each secondary pane has its own market stream, selectable timeframe/symbol, overlays, editable drawings and persisted pane settings).
-- [ ] Linked crosshair, symbol and timeframe options.
+- [x] Optional linked symbol selection across chart panes.
+- [x] Optional linked timeframe selection across chart panes.
+- [x] Synchronized crosshair time across panes when matching candle timestamps are available.
+- [ ] Synchronized visible time-range/zoom and scroll across panes.
 - [ ] Functional zoom, fit-content and chart-type controls.
 - [ ] Indicator configuration and multiple indicator instances.
 - [ ] Distraction-free/full-screen chart mode.
@@ -86,6 +89,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes paginated public exchange history, a reconnecting WebSocket market-data adapter with stale-feed detection and illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, basic drawing selection/movement/style editing and undo/redo, replay controls, workspace export, and inspector/object-tree controls.
 
 **Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded historical exchange bars when available, with speed selection, single-bar stepping and timeline scrubbing; otherwise it uses the local illustrative series. No order-entry or broker functionality is included.
+
+Crosshair synchronization is time-based: when panes have different intervals or missing candle timestamps, a corresponding crosshair may not be available in every pane. Visible-range/zoom synchronization remains planned.
 
 Some controls and roadmap items remain incomplete. The checklist above distinguishes working functionality from planned work.
 
