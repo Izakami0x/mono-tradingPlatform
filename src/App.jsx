@@ -4,7 +4,7 @@ import {readLocalRecord,writeLocalRecord} from './core/persistence.js';
 import {fetchHistoricalKlines,subscribeFuturesKlines} from './core/binanceMarketData.js';
 import {calculateIndicatorValues,calculateLatestSMAValue,calculateIncrementalIndicatorUpdate} from './core/indicators.js';
 import {FIB_LEVELS,FIB_EXTENSION_LEVELS,calculateFibExtension,rayToBounds,measureRange,formatElapsedTime} from './core/drawingGeometry.js';
-import {buildDrawingHitIndex,queryDrawingHitIndex} from './core/drawingHitIndex.js';
+import {buildDrawingHitIndex,queryDrawingHitIndex,queryDrawingsInViewport} from './core/drawingHitIndex.js';
 import {classifyBarUpdate} from './core/chartData.js';
 import {Activity,AlignLeft,Bell,Bookmark,CandlestickChart,Check,ChevronDown,ChevronLeft,ChevronRight,CircleHelp,Crosshair,Download,Eye,FileText,Grid2X2,Layers,Maximize2,Minus,MoreHorizontal,PanelRightClose,PanelRightOpen,Plus,Search,Settings2,SlidersHorizontal,Square,Star,TrendingUp,Trash2,Undo2,Waves,X,ZoomIn,ZoomOut,Play,Pause,RotateCcw,Clock3,LayoutDashboard,MousePointer2,Pencil} from 'lucide-react';
 const SYMBOLS=[['BTCUSDT','Bitcoin / Tether',96482.4,2.41,2],['ETHUSDT','Ethereum / Tether',3284.16,1.08,2],['SOLUSDT','Solana / Tether',184.72,-.64,2],['BNBUSDT','BNB / Tether',642.8,.32,2],['XRPUSDT','XRP / Tether',2.1846,-1.24,4],['DOGEUSDT','Dogecoin / Tether',.2468,3.82,4],['AVAXUSDT','Avalanche / Tether',36.92,-.18,2],['LINKUSDT','Chainlink / Tether',18.43,.76,2],['ADAUSDT','Cardano / Tether',.7124,1.62,4],['SUIUSDT','Sui / Tether',3.482,-2.03,3]].map(([symbol,name,price,change,precision])=>({symbol,name,price,change,precision}));
@@ -100,6 +100,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const pad=d.type==='channel'?105: d.type==='fib'||d.type==='fibExt'?12:24;
     return {left:Math.min(...points.map(p=>p.x))-pad,right:Math.max(...points.map(p=>p.x))+pad,top:Math.min(...points.map(p=>p.y))-pad,bottom:Math.max(...points.map(p=>p.y))+pad};
   }),[visibleDrawings,tick,times]);
+  const renderableDrawings=useMemo(()=>queryDrawingsInViewport(hitIndex,host.current?.clientWidth||1000,host.current?.clientHeight||600,80),[hitIndex,tick]);
   const distanceToSegment=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;if(!len)return Math.hypot(p.x-a.x,p.y-a.y);const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))};
   const hitTest=(d,local)=>{
     if(d.hidden)return null;
@@ -186,7 +187,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   };
   const plotWidth=chartRef.current?.timeScale().width?.()||host.current?.clientWidth||0;
   return <div className="chart-canvas"><div ref={host} className="chart-engine"/><svg className={'drawing-overlay '+(tool==='cursor'?'selection-tool':tool==='crosshair'?'cursor-tool':'drawing-tool')} style={{width:plotWidth||'100%'}} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={cancel}>
-    {visibleDrawings.map(d=>renderShape(drag?.id===d.id&&drag.current?drag.current:d))}{multiSelected.map(id=>drawingsById.get(id)).filter(d=>d&&!d.hidden&&!d.locked).map(d=>{const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2}),c=d.type==='fibExt'&&d.t3!=null?xyFor({time:d.t3,price:d.p3}):null;return a&&b?<g className="drawing-handles" key={d.id}><circle cx={a.x} cy={a.y} r="5"/><circle cx={b.x} cy={b.y} r="5"/>{c&&<circle cx={c.x} cy={c.y} r="5"/>}</g>:null})}
+    {renderableDrawings.map(d=>renderShape(drag?.id===d.id&&drag.current?drag.current:d))}{multiSelected.map(id=>drawingsById.get(id)).filter(d=>d&&!d.hidden&&!d.locked).map(d=>{const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2}),c=d.type==='fibExt'&&d.t3!=null?xyFor({time:d.t3,price:d.p3}):null;return a&&b?<g className="drawing-handles" key={d.id}><circle cx={a.x} cy={a.y} r="5"/><circle cx={b.x} cy={b.y} r="5"/>{c&&<circle cx={c.x} cy={c.y} r="5"/>}</g>:null})}
     {draft&&(()=>{const a=xyFor(draft.a),b=xyFor(draft.b),c=draft.c&&xyFor(draft.c);return a&&b?<g><line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#35c9dc" strokeDasharray="4 3"/>{c&&<line x1={c.x} y1={c.y} x2={b.x} y2={b.y} stroke="#35c9dc" strokeDasharray="4 3"/>}</g>:null})()}
   </svg><div className="chart-watermark">{symbol}<span> · </span>{tf}</div><div className="chart-ohlc">Professional chart engine · {count} bars</div></div>
 }
