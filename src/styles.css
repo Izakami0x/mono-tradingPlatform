@@ -95,3 +95,10 @@
 .center-stage:fullscreen .chart-actions{gap:7px}
 .center-stage:fullscreen .bottom-status{padding-bottom:env(safe-area-inset-bottom,0px)}
 .center-stage.focus-mode:not(:fullscreen){position:fixed;inset:0;z-index:50;width:100vw;height:100vh;max-width:none;background:#08131f}
+
+
+.object-row>button:not(.object-name){min-width:19px;height:20px;padding:2px 4px;border:1px solid transparent;border-radius:3px;color:#7894a9;font-size:10px;line-height:1}
+.object-row>button:not(.object-name):hover{border-color:#31536a;background:#10283a;color:#8ce4ee}
+.drawing-handles circle{fill:#08131f;stroke:#54d7e5;stroke-width:1.6;vector-effect:non-scaling-stroke}
+.drawing-overlay.selection-tool{cursor:default}
+.drawing-overlay.selection-tool:active{cursor:grabbing}
