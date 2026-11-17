@@ -26,8 +26,10 @@ export function rayToBounds(a, b, width, height, extendBoth = false) {
   }
   candidates.sort((p, q) => p.t - q.t);
   const unique = candidates.filter((p, i) => !i || Math.hypot(p.x-candidates[i-1].x,p.y-candidates[i-1].y) > 0.1);
-  if (unique.length < 2) return null;
-  return extendBoth ? [unique[0], unique[unique.length-1]] : [unique.find(p=>p.t>=-1e-9) || unique[0], unique[unique.length-1]];
+  if (extendBoth) return unique.length >= 2 ? [unique[0], unique[unique.length-1]] : null;
+  if (!unique.length) return null;
+  const end = unique[unique.length-1];
+  return [{ x: a.x, y: a.y }, { x: end.x, y: end.y }];
 }
 
 export function measureRange(startPrice, endPrice, startTime = 0, endTime = 0) {
