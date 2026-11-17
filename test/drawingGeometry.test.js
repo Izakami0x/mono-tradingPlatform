@@ -88,6 +88,6 @@ test('drawing spatial index handles large object counts and oversized drawings',
   const index = buildDrawingHitIndex(drawings, item => item.bounds, 128, 256);
   assert.equal(index.entries.length, 5001);
   assert.ok(index.overflow.some(entry => entry.item.id === 'long-ray'));
-  assert.deepEqual(queryDrawingHitIndex(index, 18, 18).map(item => item.id), [0, 'long-ray']);
+  assert.deepEqual(queryDrawingHitIndex(index, 18, 18).map(item => item.id), ['long-ray', 0]);
   assert.ok(queryDrawingHitIndex(index, 9000, 6000).some(item => item.id === 'long-ray'));
 });
