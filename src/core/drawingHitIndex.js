@@ -31,3 +31,12 @@ export function queryDrawingHitIndex(index, x, y, tolerance = 0) {
     .sort((a, b) => b.order - a.order)
     .map(entry => entry.item);
 }
+
+export function queryDrawingsInViewport(index, width, height, overscan = 64) {
+  if (!index || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return [];
+  const left = -overscan, top = -overscan, right = width + overscan, bottom = height + overscan;
+  return index.entries
+    .filter(({bounds}) => bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom)
+    .sort((a,b) => a.order - b.order)
+    .map(entry => entry.item);
+}
