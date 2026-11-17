@@ -14,7 +14,7 @@ MONO is a charting-first technical-analysis workspace. The initial product is br
 
 ## Current implementation
 
-The current frontend is an interactive UI foundation built with React and Vite. It includes deterministic illustrative OHLC candles, selectable instruments and timeframes, crosshair, trend/horizontal/rectangle/text/brush drawing modes, local drawing persistence, volume and moving-average toggles, bar replay, workspace export, and inspector/object-tree controls.
+The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes deterministic illustrative OHLC data, selectable instruments and timeframes, a drawing overlay with local persistence, bar replay controls, workspace export, and inspector/object-tree controls.
 
 **Market data is illustrative, not live.** The application does not yet connect to an exchange feed. Replay currently steps through the local illustrative bar series. No order-entry or broker functionality is included.
 
