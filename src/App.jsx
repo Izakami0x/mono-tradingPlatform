@@ -11,7 +11,7 @@ function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{retur
 
 import {createChart,CandlestickSeries,HistogramSeries,LineSeries,CrosshairMode,ColorType} from 'lightweight-charts';
 function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selected,onSelect,onMove,marketBars,replay,paneId='main',onCrosshair,syncedCrosshair}){
-  const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null), didFit=React.useRef(false), syncingCrosshair=React.useRef(false);
+  const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null), didFit=React.useRef(false), syncingCrosshair=React.useRef(false), onCrosshairRef=React.useRef(onCrosshair); onCrosshairRef.current=onCrosshair;
   const [draft,D]=useState(null),[tick,Tick]=useState(0),[drag,Drag]=useState(null);
   const bars=useMemo(()=>marketBars?.length?(replay?marketBars.slice(0,count):marketBars.slice(-count)):barsFor(symbol,150,basePrice).slice(0,count),[symbol,basePrice,count,marketBars,replay]);
   const interval=({'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1h':3600,'2h':7200,'4h':14400,'1D':86400,'1W':604800,'1M':2592000}[tf]||900);
@@ -35,7 +35,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const observer=new ResizeObserver(entries=>{const box=entries[0]?.contentRect;if(box)chart.applyOptions({width:Math.max(320,Math.floor(box.width)),height:Math.max(220,Math.floor(box.height))})});
     observer.observe(host.current);
     const redraw=()=>Tick(v=>v+1);
-    const crosshairMove=param=>{if(!syncingCrosshair.current&&param.time!=null)onCrosshair?.({origin:paneId,time:param.time});};
+    const crosshairMove=param=>{if(!syncingCrosshair.current&&param.time!=null)onCrosshairRef.current?.({origin:paneId,time:param.time});};
     chart.timeScale().subscribeVisibleLogicalRangeChange(redraw);
     chart.subscribeCrosshairMove(crosshairMove);
     return()=>{observer.disconnect();chart.timeScale().unsubscribeVisibleLogicalRangeChange(redraw);chart.unsubscribeCrosshairMove(crosshairMove);chart.remove();chartRef.current=null};
