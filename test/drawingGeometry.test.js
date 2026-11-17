@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FIB_LEVELS, rayToBounds, measureRange } from '../src/core/drawingGeometry.js';
+import { FIB_LEVELS, FIB_EXTENSION_LEVELS, calculateFibExtension, rayToBounds, measureRange } from '../src/core/drawingGeometry.js';
 
 test('Fibonacci retracement levels are standard and ordered', () => {
   assert.deepEqual(FIB_LEVELS.map(x => x.value), [0, .236, .382, .5, .618, .786, 1]);
@@ -28,4 +28,11 @@ test('price range reports signed delta, percentage and elapsed time', () => {
     delta: 12, percent: 12, precision: 3, timeSpan: 60
   });
   assert.equal(measureRange(0, 2).percent, 0);
+});
+
+test('three-point Fibonacci extension projects standard ratios from the third anchor', () => {
+  assert.deepEqual(FIB_EXTENSION_LEVELS, [0, .618, 1, 1.618, 2.618]);
+  assert.equal(calculateFibExtension(100, 120, 110, 1), 130);
+  assert.equal(calculateFibExtension(100, 120, 110, 1.618), 142.36);
+  assert.equal(calculateFibExtension(120, 100, 110, 1.618), 77.64);
 });
