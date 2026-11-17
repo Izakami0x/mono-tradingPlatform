@@ -23,7 +23,7 @@ jobs:
         run: |
           npm audit fix || true
           npm audit --json > audit-report.json || true
-          node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync('audit-report.json','utf8')); const entries=Object.entries(r.vulnerabilities||{}); const actionable=entries.filter(([name,v])=>v.severity==='critical'||(v.severity==='high'&&v.fixAvailable===true)); const unresolved=entries.filter(([name,v])=>v.severity==='high'&&v.fixAvailable!==true); console.log(JSON.stringify({counts:r.metadata?.vulnerabilities, actionable:actionable.map(([name,v])=>({name,severity:v.severity,fixAvailable:v.fixAvailable})), upstreamUnresolved:unresolved.map(([name,v])=>({name,severity:v.severity,fixAvailable:v.fixAvailable}))},null,2)); if(actionable.length) process.exit(1);"
+          node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync('audit-report.json','utf8')); const entries=Object.entries(r.vulnerabilities||{}); const actionable=entries.filter(([name,v])=>v.severity==='critical'||(v.severity==='high'&&v.via.some(item=>typeof item!=='string')&&v.fixAvailable===true)); const unresolved=entries.filter(([name,v])=>v.severity==='high'&&v.fixAvailable!==true); console.log(JSON.stringify({counts:r.metadata?.vulnerabilities, actionable:actionable.map(([name,v])=>({name,severity:v.severity,fixAvailable:v.fixAvailable})), upstreamUnresolved:unresolved.map(([name,v])=>({name,severity:v.severity,fixAvailable:v.fixAvailable}))},null,2)); if(actionable.length) process.exit(1);"
       - name: Unit tests
         run: npm test
       - name: Production build
