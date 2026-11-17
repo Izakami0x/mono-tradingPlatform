@@ -44,7 +44,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [ ] Drawing lock, hide/show and z-order controls.
 - [ ] Multi-select and group operations.
 - [ ] Keyboard shortcuts and escape/cancel behavior.
-- [ ] Robust IndexedDB persistence, schema versioning and recovery.
+- [x] IndexedDB persistence with schema versioning and localStorage fallback.
+- [ ] Storage migration recovery, backup/restore and corruption diagnostics.
 - [ ] Automated interaction tests for drawing tools and persistence.
 
 ### Workspace and chart controls
@@ -80,7 +81,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ## Current implementation and data limitations
 
-The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes deterministic illustrative OHLC data, selectable instruments and timeframes, a chart-coordinate drawing overlay, local drawing persistence, basic drawing selection/movement/style editing and undo/redo, replay controls, workspace export, and inspector/object-tree controls.
+The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes deterministic illustrative OHLC data, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, basic drawing selection/movement/style editing and undo/redo, replay controls, workspace export, and inspector/object-tree controls.
 
 **Market data is illustrative, not live.** The application does not yet connect to an exchange feed. Replay currently steps through the local illustrative bar series. No order-entry or broker functionality is included.
 
