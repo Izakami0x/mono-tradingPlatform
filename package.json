@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
-    "benchmark": "node scripts/benchmark-indicators.js"
+    "benchmark": "node scripts/benchmark-indicators.js && npm run benchmark:drawings",
+    "benchmark:drawings": "node scripts/benchmark-drawings.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
