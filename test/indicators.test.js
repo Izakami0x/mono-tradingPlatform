@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {calculateIndicatorValues,calculateLatestSMAValue} from '../src/core/indicators.js';
+import {calculateIndicatorValues,calculateLatestSMAValue,calculateIncrementalIndicatorUpdate} from '../src/core/indicators.js';
 
 const bars=closes=>closes.map((close,index)=>({time:1700000000+index*60,open:close,high:close+1,low:close-1,close,volume:10}));
 
@@ -42,4 +42,49 @@ test('latest SMA remains correct on a 50k-bar history',()=>{
   const latest=calculateLatestSMAValue(input,{period:50});
   assert.equal(latest.time,input.at(-1).time);
   assert.equal(latest.value,49974.5);
+});
+
+test('incremental EMA matches full calculation across repeated ticks, append and history reset',()=>{
+  let input=bars(Array.from({length:30},(_,i)=>100+i));
+  let update=calculateIncrementalIndicatorUpdate(input,{type:'EMA',period:9});
+  assert.equal(update.mode,'reset');
+  assert.deepEqual(update.values,calculateIndicatorValues(input,{type:'EMA',period:9}));
+  input=input.map((bar,i)=>i===29?{...bar,close:145,high:146}:bar);
+  update=calculateIncrementalIndicatorUpdate(input,{type:'EMA',period:9},update.state);
+  assert.equal(update.mode,'last');
+  assert.deepEqual(update.latest,calculateIndicatorValues(input,{type:'EMA',period:9}).at(-1));
+  input=input.map((bar,i)=>i===29?{...bar,close:147,high:148}:bar);
+  update=calculateIncrementalIndicatorUpdate(input,{type:'EMA',period:9},update.state);
+  assert.deepEqual(update.latest,calculateIndicatorValues(input,{type:'EMA',period:9}).at(-1));
+  input=[...input,{...input.at(-1),time:input.at(-1).time+60,open:149,high:150,low:148,close:149}];
+  update=calculateIncrementalIndicatorUpdate(input,{type:'EMA',period:9},update.state);
+  assert.equal(update.mode,'append');
+  assert.deepEqual(update.latest,calculateIndicatorValues(input,{type:'EMA',period:9}).at(-1));
+  input=input.map((bar,i)=>i===0?{...bar,close:999}:bar);
+  update=calculateIncrementalIndicatorUpdate(input,{type:'EMA',period:9},update.state);
+  assert.equal(update.mode,'reset');
+  assert.deepEqual(update.values,calculateIndicatorValues(input,{type:'EMA',period:9}));
+});
+
+test('incremental VWAP matches full calculation on live revisions, appends and UTC session reset',()=>{
+  const day=86400*22000;
+  let input=[
+    {time:day+60,high:12,low:10,close:11,volume:2},
+    {time:day+120,high:22,low:20,close:21,volume:3},
+    {time:day+180,high:32,low:30,close:31,volume:4}
+  ];
+  let update=calculateIncrementalIndicatorUpdate(input,{type:'VWAP'});
+  assert.deepEqual(update.values,calculateIndicatorValues(input,{type:'VWAP'}));
+  input=input.map((bar,i)=>i===2?{...bar,high:42,close:41,volume:6}:bar);
+  update=calculateIncrementalIndicatorUpdate(input,{type:'VWAP'},update.state);
+  assert.equal(update.mode,'last');
+  assert.deepEqual(update.latest,calculateIndicatorValues(input,{type:'VWAP'}).at(-1));
+  input=[...input,{time:day+240,high:52,low:50,close:51,volume:2}];
+  update=calculateIncrementalIndicatorUpdate(input,{type:'VWAP'},update.state);
+  assert.equal(update.mode,'append');
+  assert.deepEqual(update.latest,calculateIndicatorValues(input,{type:'VWAP'}).at(-1));
+  input=[...input,{time:day+86400+60,high:62,low:60,close:61,volume:5}];
+  update=calculateIncrementalIndicatorUpdate(input,{type:'VWAP'},update.state);
+  assert.equal(update.mode,'append');
+  assert.deepEqual(update.latest,calculateIndicatorValues(input,{type:'VWAP'}).at(-1));
 });
