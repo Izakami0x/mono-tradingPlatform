@@ -35,7 +35,14 @@ export function queryDrawingHitIndex(index, x, y, tolerance = 0) {
 export function queryDrawingsInViewport(index, width, height, overscan = 64) {
   if (!index || !Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return [];
   const left = -overscan, top = -overscan, right = width + overscan, bottom = height + overscan;
-  return index.entries
+  const minX = Math.floor(left / index.cellSize), maxX = Math.floor(right / index.cellSize);
+  const minY = Math.floor(top / index.cellSize), maxY = Math.floor(bottom / index.cellSize);
+  const candidates = new Set(index.overflow);
+  for (let x = minX; x <= maxX; x += 1) for (let y = minY; y <= maxY; y += 1) {
+    const bucket = index.cells.get(x + ':' + y);
+    if (bucket) for (const entry of bucket) candidates.add(entry);
+  }
+  return [...candidates]
     .filter(({bounds}) => bounds.right >= left && bounds.left <= right && bounds.bottom >= top && bounds.top <= bottom)
     .sort((a,b) => a.order - b.order)
     .map(entry => entry.item);
