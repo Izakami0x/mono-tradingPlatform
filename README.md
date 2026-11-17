@@ -72,7 +72,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Functional zoom in/out controls using the chart's visible logical range.
 - [x] Fit-to-data control for all currently loaded bars.
 - [x] Candlestick, close-line and area chart display modes (main chart).
-- [x] Indicator manager with independently configurable, multiple SMA, EMA and VWAP instances (period, visibility and color; main chart overlays).
+- [x] Indicator manager with independently configurable, multiple SMA, EMA and VWAP instances (period, visibility and color; main chart overlays); SMA overlays update from the latest rolling window during live candle ticks.
 - [x] Distraction-free/full-screen chart mode for the complete chart workspace, with browser fullscreen state tracking and an exit control.
 - [x] Named workspaces: save new, overwrite current, rename, duplicate, delete and restore.
 - [x] Workspace snapshots include main chart settings, indicators, drawings, linked-chart preferences, layout, and saved secondary-pane symbols/timeframes/drawings.
@@ -90,11 +90,12 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ### Quality and release
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
-- [x] Unit tests for SMA, EMA and session-based VWAP calculations.
+- [x] Unit tests for SMA, EMA and session-based VWAP calculations, including latest-value SMA parity with full-series calculation.
 - [x] GitHub Actions dependency install, safe npm audit remediation, actionable high/critical audit gate, unit tests and production build.
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
 - [ ] Performance profiling with large candle histories and many drawings.
+- [ ] Incremental EMA/VWAP recalculation and large-history performance benchmark.
 - [ ] Error boundaries, diagnostics and import/export validation.
 - [ ] Windows install/launch package and user documentation.
 - [ ] Release checklist and verified downloadable build.
