@@ -18,6 +18,8 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   const [draft,D]=useState(null),[tick,Tick]=useState(0),[drag,Drag]=useState(null),[multiSelected,MultiSelected]=useState(()=>selected==null?[]:[selected]);
   useEffect(()=>{if(selected==null)MultiSelected([]);else MultiSelected(ids=>ids.includes(selected)?ids:[selected])},[selected]);
   const bars=useMemo(()=>marketBars?.length?(replay?marketBars.slice(0,count):marketBars.slice(-count)):barsFor(symbol,150,basePrice).slice(0,count),[symbol,basePrice,count,marketBars,replay]);
+  const visibleDrawings=useMemo(()=>drawings.filter(d=>!d.hidden),[drawings]);
+  const drawingsById=useMemo(()=>new Map(drawings.map(d=>[d.id,d])),[drawings]);
   const interval=({'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1h':3600,'2h':7200,'4h':14400,'1D':86400,'1W':604800,'1M':2592000}[tf]||900);
   const times=useMemo(()=>bars.map((bar,index)=>({...bar,time:bar.time??1700000000+index*interval})),[bars,interval]);
   useEffect(()=>{didFit.current=false},[symbol,tf]);
@@ -172,7 +174,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   };
   const plotWidth=chartRef.current?.timeScale().width?.()||host.current?.clientWidth||0;
   return <div className="chart-canvas"><div ref={host} className="chart-engine"/><svg className={'drawing-overlay '+(tool==='cursor'?'selection-tool':tool==='crosshair'?'cursor-tool':'drawing-tool')} style={{width:plotWidth||'100%'}} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={cancel}>
-    {drawings.filter(d=>!d.hidden).map(d=>renderShape(drag?.id===d.id&&drag.current?drag.current:d))}{multiSelected.map(id=>drawings.find(d=>d.id===id&&!d.hidden&&!d.locked)).filter(Boolean).map(d=>{const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2}),c=d.type==='fibExt'&&d.t3!=null?xyFor({time:d.t3,price:d.p3}):null;return a&&b?<g className="drawing-handles" key={d.id}><circle cx={a.x} cy={a.y} r="5"/><circle cx={b.x} cy={b.y} r="5"/>{c&&<circle cx={c.x} cy={c.y} r="5"/>}</g>:null})}
+    {visibleDrawings.map(d=>renderShape(drag?.id===d.id&&drag.current?drag.current:d))}{multiSelected.map(id=>drawingsById.get(id)).filter(d=>d&&!d.hidden&&!d.locked).map(d=>{const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2}),c=d.type==='fibExt'&&d.t3!=null?xyFor({time:d.t3,price:d.p3}):null;return a&&b?<g className="drawing-handles" key={d.id}><circle cx={a.x} cy={a.y} r="5"/><circle cx={b.x} cy={b.y} r="5"/>{c&&<circle cx={c.x} cy={c.y} r="5"/>}</g>:null})}
     {draft&&(()=>{const a=xyFor(draft.a),b=xyFor(draft.b),c=draft.c&&xyFor(draft.c);return a&&b?<g><line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#35c9dc" strokeDasharray="4 3"/>{c&&<line x1={c.x} y1={c.y} x2={b.x} y2={b.y} stroke="#35c9dc" strokeDasharray="4 3"/>}</g>:null})()}
   </svg><div className="chart-watermark">{symbol}<span> · </span>{tf}</div><div className="chart-ohlc">Professional chart engine · {count} bars</div></div>
 }
