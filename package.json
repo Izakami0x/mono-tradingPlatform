@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
+    "test:e2e": "playwright test",
     "benchmark": "node scripts/benchmark-indicators.js && npm run benchmark:drawings",
     "benchmark:drawings": "node scripts/benchmark-drawings.js"
   },
@@ -19,6 +20,7 @@
     "lightweight-charts": "^5.0.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "vite": "^6.4.6"
   }
 }
