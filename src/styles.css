@@ -86,3 +86,12 @@
 .workspace-entry>button.workspace-delete{color:#d38a98}
 .workspace-modal>footer{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid #20394d}
 @media(max-width:600px){.workspace-entry{flex-wrap:wrap}.workspace-entry-info{flex-basis:100%;padding-bottom:5px}.workspace-save-row{flex-direction:column}}
+
+
+.center-stage:fullscreen{width:100vw;height:100vh;max-width:none;background:#08131f}
+.center-stage:fullscreen .chart-layout{min-height:0}
+.center-stage:fullscreen .chart-column{min-height:0}
+.center-stage:fullscreen .chart-canvas{min-height:0}
+.center-stage:fullscreen .chart-actions{gap:7px}
+.center-stage:fullscreen .bottom-status{padding-bottom:env(safe-area-inset-bottom,0px)}
+.center-stage.focus-mode:not(:fullscreen){position:relative;z-index:12}
