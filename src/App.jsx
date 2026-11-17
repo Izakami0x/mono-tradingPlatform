@@ -3,9 +3,10 @@ import {generateDemoBars as barsFor} from './core/marketData.js';
 import {readLocalRecord,writeLocalRecord} from './core/persistence.js';
 import {fetchHistoricalKlines,subscribeFuturesKlines} from './core/binanceMarketData.js';
 import {calculateIndicatorValues} from './core/indicators.js';
+import {FIB_LEVELS,rayToBounds,measureRange} from './core/drawingGeometry.js';
 import {Activity,AlignLeft,Bell,Bookmark,CandlestickChart,Check,ChevronDown,ChevronLeft,ChevronRight,CircleHelp,Crosshair,Download,Eye,FileText,Grid2X2,Layers,Maximize2,Minus,MoreHorizontal,PanelRightClose,PanelRightOpen,Plus,Search,Settings2,SlidersHorizontal,Square,Star,TrendingUp,Trash2,Undo2,Waves,X,ZoomIn,ZoomOut,Play,Pause,RotateCcw,Clock3,LayoutDashboard,MousePointer2,Pencil} from 'lucide-react';
 const SYMBOLS=[['BTCUSDT','Bitcoin / Tether',96482.4,2.41,2],['ETHUSDT','Ethereum / Tether',3284.16,1.08,2],['SOLUSDT','Solana / Tether',184.72,-.64,2],['BNBUSDT','BNB / Tether',642.8,.32,2],['XRPUSDT','XRP / Tether',2.1846,-1.24,4],['DOGEUSDT','Dogecoin / Tether',.2468,3.82,4],['AVAXUSDT','Avalanche / Tether',36.92,-.18,2],['LINKUSDT','Chainlink / Tether',18.43,.76,2],['ADAUSDT','Cardano / Tether',.7124,1.62,4],['SUIUSDT','Sui / Tether',3.482,-2.03,3]].map(([symbol,name,price,change,precision])=>({symbol,name,price,change,precision}));
-const TOOLS=[['cursor',MousePointer2,'Cursor'],['crosshair',Crosshair,'Crosshair'],['trend',TrendingUp,'Trend line'],['horizontal',Minus,'Horizontal line'],['channel',Waves,'Channel'],['rectangle',Square,'Rectangle'],['text',AlignLeft,'Text note'],['brush',Pencil,'Brush']];
+const TOOLS=[['cursor',MousePointer2,'Cursor'],['crosshair',Crosshair,'Crosshair'],['trend',TrendingUp,'Trend line'],['ray',TrendingUp,'Ray'],['extended',TrendingUp,'Extended line'],['horizontal',Minus,'Horizontal line'],['horizontalRay',Minus,'Horizontal ray'],['channel',Waves,'Channel'],['rectangle',Square,'Rectangle'],['fib',Activity,'Fibonacci retracement'],['measure',Activity,'Price range'],['text',AlignLeft,'Text note'],['brush',Pencil,'Brush']];
 const TFS=['1m','3m','5m','15m','30m','1h','2h','4h','1D','1W','1M'], STORE='mono.workspace.v1';
 const fmt=(v,p=2)=>v.toLocaleString('en-US',{minimumFractionDigits:p,maximumFractionDigits:p});
 function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
@@ -78,13 +79,15 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     if(d.hidden)return null;
     const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});if(!a||!b)return null;
     if(!d.locked){if(Math.hypot(local.x-a.x,local.y-a.y)<=10)return 'anchor1';if(Math.hypot(local.x-b.x,local.y-b.y)<=10)return 'anchor2'}
-    if(d.type==='horizontal')return Math.abs(local.y-a.y)<=7?'move':null;
+    if(d.type==='horizontal'||d.type==='horizontalRay')return Math.abs(local.y-a.y)<=7&&local.x>=a.x-7?'move':null;
     if(d.type==='rectangle'){
       const left=Math.min(a.x,b.x),right=Math.max(a.x,b.x),top=Math.min(a.y,b.y),bottom=Math.max(a.y,b.y),inside=local.x>=left&&local.x<=right&&local.y>=top&&local.y<=bottom;
       const edge=local.x>=left-6&&local.x<=right+6&&local.y>=top-6&&local.y<=bottom+6&&(Math.abs(local.x-left)<=7||Math.abs(local.x-right)<=7||Math.abs(local.y-top)<=7||Math.abs(local.y-bottom)<=7);
       return inside||edge?'move':null;
     }
     if(d.type==='text')return Math.hypot(local.x-a.x,local.y-a.y)<=20?'move':null;
+    if(d.type==='fib'){const lo=Math.min(a.x,b.x),hi=Math.max(a.x,b.x);return FIB_LEVELS.some(level=>local.x>=lo-6&&local.x<=hi+6&&Math.abs(local.y-(a.y+(b.y-a.y)*level.value))<=6)?'move':null;}
+    if(d.type==='measure'){const left=Math.min(a.x,b.x),right=Math.max(a.x,b.x),top=Math.min(a.y,b.y),bottom=Math.max(a.y,b.y);return local.x>=left-6&&local.x<=right+6&&local.y>=top-6&&local.y<=bottom+6?'move':null;}
     if(d.type==='brush'&&d.points?.length>1){const pts=d.points.map(x=>xyFor(x)).filter(Boolean);return pts.some((point,index)=>index>0&&distanceToSegment(local,pts[index-1],point)<=7)?'move':null}
     if(d.type==='channel'){
       const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,offset=Math.max(12,Math.min(90,Math.abs(dx)*.12)),ox=-dy/len*offset,oy=dx/len*offset;
@@ -123,9 +126,9 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   };
   const finish=e=>{
     if(draft){const p=pointFromEvent(e)||draft.b;const tiny=Math.abs(p.time-draft.a.time)<interval/3&&Math.abs(p.price-draft.a.price)<basePrice*.00001;
-      const end=tool==='horizontal'?{...draft.a,time:p.time}:p;
+      const end=['horizontal','horizontalRay'].includes(tool)?{...draft.a,time:p.time}:p;
       if(tool==='text'){const text=window.prompt('Enter chart note:','Note');if(text?.trim())onDraw({id:Date.now()+Math.random(),type:tool,t1:draft.a.time,t2:end.time,p1:draft.a.price,p2:end.price,color:'#35c9dc',text:text.trim()})}
-      else if(!tiny||tool==='horizontal')onDraw({id:Date.now()+Math.random(),type:tool,t1:draft.a.time,t2:end.time,p1:draft.a.price,p2:end.price,points:tool==='brush'?draft.points:undefined,color:'#35c9dc',text:''});
+      else if(!tiny||['horizontal','horizontalRay'].includes(tool))onDraw({id:Date.now()+Math.random(),type:tool,t1:draft.a.time,t2:end.time,p1:draft.a.price,p2:end.price,points:tool==='brush'?draft.points:undefined,color:'#35c9dc',text:''});
       D(null);
     }
     if(drag){
@@ -138,6 +141,10 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});if(!a||!b)return null;
     const props={stroke:d.color||'#35c9dc',strokeWidth:d.width||(selected===d.id?2.5:1.5),strokeOpacity:d.opacity??1,vectorEffect:'non-scaling-stroke'};
     if(d.type==='horizontal')return <line key={d.id} {...props} x1="0" x2="100%" y1={a.y} y2={a.y}/>;
+    if(d.type==='horizontalRay')return <line key={d.id} {...props} x1={a.x} x2="100%" y1={a.y} y2={a.y}/>;
+    if(d.type==='ray'||d.type==='extended'){const ends=rayToBounds(a,b,host.current?.clientWidth||1000,host.current?.clientHeight||600,d.type==='extended');return ends?<line key={d.id} {...props} x1={ends[0].x} y1={ends[0].y} x2={ends[1].x} y2={ends[1].y}/>:null;}
+    if(d.type==='fib'){return <g key={d.id}>{FIB_LEVELS.map(level=>{const y=a.y+(b.y-a.y)*level.value,price=d.p1+(d.p2-d.p1)*level.value;return <g key={level.value}><line {...props} x1={Math.min(a.x,b.x)} x2={Math.max(a.x,b.x)} y1={y} y2={y} strokeOpacity={level.value===0||level.value===1?1:.72}/><text x={Math.max(a.x,b.x)+5} y={y-3} fill={d.color||'#35c9dc'} fontSize="10" stroke="#08131f" strokeWidth="2.5" paintOrder="stroke">{level.label} · {fmt(price,price<1?4:2)}</text></g>})}</g>;}
+    if(d.type==='measure'){const stats=measureRange(d.p1,d.p2,d.t1,d.t2),left=Math.min(a.x,b.x),top=Math.min(a.y,b.y),width=Math.max(2,Math.abs(b.x-a.x)),height=Math.max(2,Math.abs(b.y-a.y));return <g key={d.id}><rect {...props} x={left} y={top} width={width} height={height} fill={d.color||'#35c9dc'} fillOpacity=".12" strokeDasharray="5 3"/><text x={left+width/2} y={top-8} textAnchor="middle" fill={d.color||'#35c9dc'} fontSize="10" stroke="#08131f" strokeWidth="3" paintOrder="stroke">{stats.delta>0?'+':''}{fmt(stats.delta,stats.precision)} ({stats.percent>0?'+':''}{stats.percent.toFixed(2)}%)</text></g>;}
     if(d.type==='rectangle')return <rect key={d.id} {...props} x={Math.min(a.x,b.x)} y={Math.min(a.y,b.y)} width={Math.max(2,Math.abs(b.x-a.x))} height={Math.max(2,Math.abs(b.y-a.y))} fill={d.color} fillOpacity=".08"/>;
     if(d.type==='text')return <g key={d.id}><circle cx={a.x} cy={a.y} r="3" fill={d.color}/><text x={a.x+7} y={a.y-7} fill={d.color} fontSize="12">{d.text}</text></g>;
     if(d.type==='brush'&&d.points?.length>1){const pts=d.points.map(q=>xyFor(q)).filter(Boolean);return <polyline key={d.id} {...props} fill="none" strokeLinecap="round" strokeLinejoin="round" points={pts.map(q=>q.x+','+q.y).join(' ')}/>;}
