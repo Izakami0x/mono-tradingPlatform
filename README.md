@@ -91,13 +91,17 @@ This checklist is the source of truth for implementation progress. Mark an item 
 ### Quality and release
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
 - [x] Unit tests for SMA, EMA and session-based VWAP calculations.
-- [x] GitHub Actions dependency install, high-severity npm audit gate, unit-test and production-build workflow.
+- [x] GitHub Actions dependency install, safe npm audit remediation, actionable high/critical audit gate, unit tests and production build.
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
 - [ ] Performance profiling with large candle histories and many drawings.
 - [ ] Error boundaries, diagnostics and import/export validation.
 - [ ] Windows install/launch package and user documentation.
 - [ ] Release checklist and verified downloadable build.
+
+## Dependency security
+
+Vite is pinned to the maintained 6.4 line. CI applies non-breaking npm audit fixes and fails on critical findings or high-severity findings with a safe non-breaking fix. High-severity upstream advisories without a safe published fix are reported explicitly rather than forcing an unsupported major downgrade; they remain open security follow-up items until upstream remediation is available.
 
 ## Current implementation and data limitations
 
