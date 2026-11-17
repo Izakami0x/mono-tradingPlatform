@@ -3,3 +3,5 @@
 .chart-engine{position:absolute;inset:0;width:100%;height:100%;z-index:1}.drawing-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}.drawing-overlay.drawing-tool{pointer-events:auto;touch-action:none}.chart-watermark,.chart-ohlc{z-index:3;pointer-events:none}
 
 .drawing-overlay.selection-tool{pointer-events:auto;cursor:default;touch-action:none}.drawing-overlay.cursor-tool{pointer-events:none}
+
+.drawing-handles circle{fill:#08131f;stroke:#35c9dc;stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}.object-row{display:flex;align-items:center;gap:5px;padding:4px 0 4px 22px!important}.object-row .object-name{flex:1;text-align:left;color:inherit;font-size:10px}.object-row>button:not(.object-name){padding:2px 5px;color:#6f9eb1;font-size:9px}.object-row.object-selected{background:#10283a}.drawing-overlay.selection-tool{cursor:default}
