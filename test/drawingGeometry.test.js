@@ -61,6 +61,9 @@ test('chart data update classifier distinguishes last-candle updates, appends an
   const old = [{time: 1}, {time: 2}, {time: 3}];
   assert.equal(classifyBarUpdate(old, [{time: 1}, {time: 2}, {time: 3}]), 'last');
   assert.equal(classifyBarUpdate(old, [{time: 1}, {time: 2}, {time: 3}, {time: 4}]), 'append');
+  assert.equal(classifyBarUpdate([{time:1,close:10},{time:2,close:20}], [{time:1,close:11},{time:2,close:20}]), 'reset');
+  assert.equal(classifyBarUpdate([{time:1,close:10},{time:2,close:20}], [{time:1,close:10},{time:2,close:21}]), 'last');
+  assert.equal(classifyBarUpdate([{time:1,close:10}], [{time:1,close:11},{time:2,close:20}]), 'reset');
   assert.equal(classifyBarUpdate(old, [{time: 2}, {time: 3}, {time: 4}]), 'reset');
   assert.equal(classifyBarUpdate([], [{time: 1}]), 'reset');
 });
