@@ -58,7 +58,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Pointer cancellation discards in-progress drawings and drag edits without committing partial work.
 - [x] IndexedDB persistence with schema versioning and localStorage fallback.
 - [ ] Storage migration recovery, backup/restore and corruption diagnostics.
-- [x] Playwright browser interaction suite added for drawing creation/selection, movement, undo/redo, reload persistence, object lock/hide, and independent secondary-chart symbol state; CI execution verifies Chromium behavior.
+- [x] Playwright browser interaction suite added for drawing creation/selection, movement, undo/redo, reload persistence, object lock/hide, and independent secondary-chart symbol state.\n- [ ] Resolve chart-pointer drawing gesture failures and obtain a passing Chromium CI run.
 - [ ] Resize-handle and cross-pane linked-interaction browser coverage.
 
 ### Workspace and chart controls
@@ -95,7 +95,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
 - [x] Unit tests for SMA, EMA and session-based VWAP calculations, including latest-value SMA parity and incremental EMA/VWAP parity across repeated ticks, appends, UTC session boundaries and historical resets.
 - [x] GitHub Actions dependency install, safe npm audit remediation, actionable high/critical audit gate, unit tests and production build.
-- [x] Automated browser interaction tests run in Chromium in GitHub Actions.
+- [ ] Automated browser interaction tests pass in Chromium in GitHub Actions.
 - [ ] Automated component tests.
 - [ ] Accessibility and keyboard-navigation pass.
 - [x] 50k-candle SMA correctness regression test and informational SMA/EMA/VWAP benchmark in CI.
