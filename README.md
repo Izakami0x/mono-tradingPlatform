@@ -37,6 +37,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Forward ray, extended line and horizontal ray tools.
 - [x] Fibonacci retracement with standard 0 / 23.6 / 38.2 / 50 / 61.8 / 78.6 / 100% levels and price labels.
 - [x] Price-range measurement with signed price delta and percentage change.
+- [x] Date/time and bar-count measurement tools; candle counts are inclusive and derived from loaded chart timestamps.
 - [x] Select drawings from the chart and object tree.
 - [x] Drag selected drawings to reposition them.
 - [x] Drawing color, opacity, line-width and solid/dashed/dotted line-style properties.
@@ -84,7 +85,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [ ] Persisted replay position and replay session state.
 - [ ] Alert rules backed by a live data source.
 - [ ] Fibonacci expansion presets, configurable level sets and extension direction options.
-- [ ] Additional measurement modes (date/time and bar-count measurements).
+
 
 ### Quality and release
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
@@ -99,7 +100,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ## Current implementation and data limitations
 
-The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, close-line and area display modes, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. The main chart includes a configurable overlay manager supporting multiple SMA, EMA and cumulative VWAP instances, each with independent period (where applicable), visibility and color settings. Main-chart zoom in/out adjusts the visible logical range, while Fit restores the full loaded history. It includes paginated public exchange history, a reconnecting WebSocket market-data adapter with stale-feed detection and illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, geometry-aware drawing selection, multi-select/group movement, endpoint editing, ray/extended-line/horizontal-ray tools, labeled Fibonacci retracements and three-anchor extensions, price-range measurements with elapsed-time labels, editable annotation text and line styles, layer ordering, style editing and undo/redo, replay controls, complete workspace JSON export, named workspace save/restore/rename/duplicate/delete, and inspector/object-tree controls.
+The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, close-line and area display modes, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. The main chart includes a configurable overlay manager supporting multiple SMA, EMA and cumulative VWAP instances, each with independent period (where applicable), visibility and color settings. Main-chart zoom in/out adjusts the visible logical range, while Fit restores the full loaded history. It includes paginated public exchange history, a reconnecting WebSocket market-data adapter with stale-feed detection and illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, geometry-aware drawing selection, multi-select/group movement, endpoint editing, ray/extended-line/horizontal-ray tools, labeled Fibonacci retracements and three-anchor extensions, price-range, date/time and inclusive bar-count measurements with elapsed-time labels, editable annotation text and line styles, layer ordering, style editing and undo/redo, replay controls, complete workspace JSON export, named workspace save/restore/rename/duplicate/delete, and inspector/object-tree controls.
 
 **Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded historical exchange bars when available, with speed selection, single-bar stepping and timeline scrubbing; otherwise it uses the local illustrative series. No order-entry or broker functionality is included.
 
