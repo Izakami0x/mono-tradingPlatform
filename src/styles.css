@@ -45,3 +45,19 @@
 .chart-layout.layout-6 .secondary-pane-head,.chart-layout.layout-8 .secondary-pane-head{height:25px}
 .chart-layout.layout-8 .secondary-pane-head select{font-size:7px;padding:2px;max-width:46%}
 .chart-layout.layout-8 .secondary-pane-head span{font-size:7px}
+
+
+.indicator-manager{position:absolute;z-index:8;top:78px;left:50%;transform:translateX(-50%);width:min(390px,calc(100vw - 90px));max-height:55%;overflow:auto;background:#0d2030;border:1px solid #29465c;border-radius:6px;box-shadow:0 14px 40px #000b;padding:10px;color:#b9cbd8}
+.indicator-manager-head{display:flex;align-items:center;gap:10px;padding:2px 2px 9px;border-bottom:1px solid #20394d;font-size:10px;letter-spacing:.7px}
+.indicator-manager-head span{font-size:9px;color:#718ba0;letter-spacing:0;font-weight:400}
+.indicator-manager-head button{margin-left:auto;color:#89a2b6;padding:3px}
+.indicator-add-row{display:flex;gap:6px;padding:10px 0}
+.indicator-add-row button{flex:1;padding:7px 5px;border:1px solid #28465c;border-radius:4px;color:#68d5e5;font-size:10px}
+.indicator-add-row button:hover{background:#12364a}
+.indicator-row{display:flex;align-items:center;gap:9px;padding:7px 3px;border-top:1px solid #192f42;font-size:10px}
+.indicator-row input[type=checkbox]{accent-color:#35c9dc}
+.indicator-type{width:48px;color:#d7e5ef;font:10px 'DM Mono'}
+.indicator-period{width:62px;background:#10283b;border:1px solid #29465c;border-radius:3px;color:#d7e5ef;padding:4px;font:10px 'DM Mono'}
+.indicator-color{width:28px;height:23px;padding:1px;background:transparent;border:1px solid #29465c;border-radius:3px}
+.indicator-row>button{margin-left:auto;color:#d38a98;padding:4px}
+.indicator-empty{padding:8px 2px;color:#718ba0;font-size:10px}
