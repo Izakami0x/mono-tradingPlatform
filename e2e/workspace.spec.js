@@ -12,8 +12,10 @@ async function drawTrendLine(page) {
   const bounds = await chart.boundingBox();
   expect(bounds).not.toBeNull();
   await page.getByRole('button', { name: 'Trend line' }).click();
-  await chart.click({ position: { x: bounds.width * 0.34, y: bounds.height * 0.38 } });
-  await chart.click({ position: { x: bounds.width * 0.67, y: bounds.height * 0.62 } });
+  await page.mouse.move(bounds.x + bounds.width * 0.34, bounds.y + bounds.height * 0.38);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width * 0.67, bounds.y + bounds.height * 0.62, { steps: 8 });
+  await page.mouse.up();
   await expect(page.locator('.object-row').filter({ hasText: 'trend' })).toHaveCount(1);
 }
 
@@ -33,8 +35,10 @@ test('creates, selects, moves, undoes and redoes a drawing', async ({ page }) =>
   const chart = page.locator('.drawing-overlay').first();
   const bounds = await chart.boundingBox();
   await page.getByRole('button', { name: 'Cursor' }).click();
-  await chart.click({ position: { x: bounds.width * 0.5, y: bounds.height * 0.5 } });
-  await chart.click({ position: { x: bounds.width * 0.55, y: bounds.height * 0.44 } });
+  await page.mouse.move(bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width * 0.55, bounds.y + bounds.height * 0.44, { steps: 5 });
+  await page.mouse.up();
   await expect(page.locator('.object-row')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'Undo' }).click();
