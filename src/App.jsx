@@ -95,10 +95,11 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const width=host.current?.clientWidth||1000,height=host.current?.clientHeight||600;
     if(['ray','extended','horizontal','horizontalRay'].includes(d.type))return d.type==='horizontal'||d.type==='horizontalRay'?{left:0,right:width,top:a.y-10,bottom:a.y+10}:{left:0,right:width,top:0,bottom:height};
     const points=[a,b];
-    if(d.type==='fibExt'&&d.t3!=null){const c=xyFor({time:d.t3,price:d.p3});if(c)points.push(c);}
+    if(d.type==='fibExt'&&d.t3!=null){const c=xyFor({time:d.t3,price:d.p3}),series=candleRef.current;if(c){points.push(c);if(series)for(const level of FIB_EXTENSION_LEVELS){const y=series.priceToCoordinate(calculateFibExtension(d.p1,d.p2,d.p3,level));if(y!=null)points.push({x:c.x,y});}}}
     if(d.type==='brush'&&d.points)for(const point of d.points){const p=xyFor(point);if(p)points.push(p);}
     const pad=d.type==='channel'?105: d.type==='fib'||d.type==='fibExt'?12:24;
-    return {left:Math.min(...points.map(p=>p.x))-pad,right:Math.max(...points.map(p=>p.x))+pad,top:Math.min(...points.map(p=>p.y))-pad,bottom:Math.max(...points.map(p=>p.y))+pad};
+    const left=Math.min(...points.map(p=>p.x))-pad,right=d.type==='fibExt'&&points[2]?.x<width?width:Math.max(...points.map(p=>p.x))+pad;
+    return {left,right,top:Math.min(...points.map(p=>p.y))-pad,bottom:Math.max(...points.map(p=>p.y))+pad};
   }),[visibleDrawings,tick,times]);
   const renderableDrawings=useMemo(()=>queryDrawingsInViewport(hitIndex,host.current?.clientWidth||1000,host.current?.clientHeight||600,80),[hitIndex,tick]);
   const distanceToSegment=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;if(!len)return Math.hypot(p.x-a.x,p.y-a.y);const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))};
