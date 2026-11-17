@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { buildDrawingHitIndex, queryDrawingHitIndex } from '../src/core/drawingHitIndex.js';
 import { FIB_LEVELS, FIB_EXTENSION_LEVELS, calculateFibExtension, rayToBounds, measureRange, countBarsBetween, formatElapsedTime } from '../src/core/drawingGeometry.js';
 
 test('Fibonacci retracement levels are standard and ordered', () => {
@@ -66,4 +67,27 @@ test('chart data update classifier distinguishes last-candle updates, appends an
   assert.equal(classifyBarUpdate([{time:1,close:10}], [{time:1,close:11},{time:2,close:20}]), 'reset');
   assert.equal(classifyBarUpdate(old, [{time: 2}, {time: 3}, {time: 4}]), 'reset');
   assert.equal(classifyBarUpdate([], [{time: 1}]), 'reset');
+});
+
+test('drawing spatial index returns nearby candidates in reverse layer order', () => {
+  const drawings = [
+    { id: 'back', bounds: { left: 10, top: 10, right: 40, bottom: 40 } },
+    { id: 'front', bounds: { left: 20, top: 20, right: 50, bottom: 50 } },
+    { id: 'far', bounds: { left: 500, top: 500, right: 520, bottom: 520 } }
+  ];
+  const index = buildDrawingHitIndex(drawings, item => item.bounds, 64);
+  assert.deepEqual(queryDrawingHitIndex(index, 25, 25).map(item => item.id), ['front', 'back']);
+  assert.deepEqual(queryDrawingHitIndex(index, 100, 100), []);
+});
+
+test('drawing spatial index handles large object counts and oversized drawings', () => {
+  const drawings = Array.from({ length: 5000 }, (_, i) => ({
+    id: i, bounds: { left: (i % 100) * 180, top: Math.floor(i / 100) * 140, right: (i % 100) * 180 + 24, bottom: Math.floor(i / 100) * 140 + 24 }
+  }));
+  drawings.push({ id: 'long-ray', bounds: { left: 0, top: 0, right: 20000, bottom: 12000 } });
+  const index = buildDrawingHitIndex(drawings, item => item.bounds, 128, 256);
+  assert.equal(index.entries.length, 5001);
+  assert.ok(index.overflow.some(entry => entry.item.id === 'long-ray'));
+  assert.deepEqual(queryDrawingHitIndex(index, 18, 18).map(item => item.id), [0, 'long-ray']);
+  assert.ok(queryDrawingHitIndex(index, 9000, 6000).some(item => item.id === 'long-ray'));
 });
