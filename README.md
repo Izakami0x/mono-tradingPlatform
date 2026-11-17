@@ -48,13 +48,12 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Geometry-aware hit testing for trend lines, horizontal lines, rectangles, channels, text and brush strokes.
 - [x] Anchor handles and endpoint editing for drawing endpoints, including diagonal rectangle resizing.
 - [x] Drawing visibility and lock controls in the object tree.
-- [x] Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Y, Delete/Backspace and Escape.
+- [x] Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Y, Delete/Backspace and Escape; pointer cancellation discards unfinished drawing edits.
 - [x] Rectangle resizing through endpoint handles; channel centerline endpoint editing.
 - [x] Drawing lock and hide/show controls.
 - [x] Bring-forward/send-backward layer ordering controls in the object tree.
 - [x] Shift-click multi-select and group movement for unlocked drawings; grouped moves commit as one undoable change.
 - [x] Pointer cancellation discards in-progress drawings and drag edits without committing partial work.
-- [ ] Keyboard shortcuts and escape/cancel behavior.
 - [x] IndexedDB persistence with schema versioning and localStorage fallback.
 - [ ] Storage migration recovery, backup/restore and corruption diagnostics.
 - [ ] Automated interaction tests for drawing tools and persistence.
@@ -92,7 +91,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 ### Quality and release
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
 - [x] Unit tests for SMA, EMA and session-based VWAP calculations.
-- [x] GitHub Actions dependency install, unit-test and production-build workflow.
+- [x] GitHub Actions dependency install, high-severity npm audit gate, unit-test and production-build workflow.
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
 - [ ] Performance profiling with large candle histories and many drawings.
