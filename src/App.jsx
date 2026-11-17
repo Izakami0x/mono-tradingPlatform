@@ -4,6 +4,7 @@ import {readLocalRecord,writeLocalRecord} from './core/persistence.js';
 import {fetchHistoricalKlines,subscribeFuturesKlines} from './core/binanceMarketData.js';
 import {calculateIndicatorValues} from './core/indicators.js';
 import {FIB_LEVELS,FIB_EXTENSION_LEVELS,calculateFibExtension,rayToBounds,measureRange,formatElapsedTime} from './core/drawingGeometry.js';
+import {classifyBarUpdate} from './core/chartData.js';
 import {Activity,AlignLeft,Bell,Bookmark,CandlestickChart,Check,ChevronDown,ChevronLeft,ChevronRight,CircleHelp,Crosshair,Download,Eye,FileText,Grid2X2,Layers,Maximize2,Minus,MoreHorizontal,PanelRightClose,PanelRightOpen,Plus,Search,Settings2,SlidersHorizontal,Square,Star,TrendingUp,Trash2,Undo2,Waves,X,ZoomIn,ZoomOut,Play,Pause,RotateCcw,Clock3,LayoutDashboard,MousePointer2,Pencil} from 'lucide-react';
 const SYMBOLS=[['BTCUSDT','Bitcoin / Tether',96482.4,2.41,2],['ETHUSDT','Ethereum / Tether',3284.16,1.08,2],['SOLUSDT','Solana / Tether',184.72,-.64,2],['BNBUSDT','BNB / Tether',642.8,.32,2],['XRPUSDT','XRP / Tether',2.1846,-1.24,4],['DOGEUSDT','Dogecoin / Tether',.2468,3.82,4],['AVAXUSDT','Avalanche / Tether',36.92,-.18,2],['LINKUSDT','Chainlink / Tether',18.43,.76,2],['ADAUSDT','Cardano / Tether',.7124,1.62,4],['SUIUSDT','Sui / Tether',3.482,-2.03,3]].map(([symbol,name,price,change,precision])=>({symbol,name,price,change,precision}));
 const TOOLS=[['cursor',MousePointer2,'Cursor'],['crosshair',Crosshair,'Crosshair'],['trend',TrendingUp,'Trend line'],['ray',TrendingUp,'Ray'],['extended',TrendingUp,'Extended line'],['horizontal',Minus,'Horizontal line'],['horizontalRay',Minus,'Horizontal ray'],['channel',Waves,'Channel'],['rectangle',Square,'Rectangle'],['fib',Activity,'Fibonacci retracement'],['fibExt',Activity,'Fibonacci extension (3 points)'],['measure',Activity,'Price range'],['measureTime',Clock3,'Date / time range'],['measureBars',Activity,'Bar count range'],['text',AlignLeft,'Text note'],['brush',Pencil,'Brush']];
@@ -13,7 +14,7 @@ function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{retur
 
 import {createChart,CandlestickSeries,HistogramSeries,LineSeries,AreaSeries,CrosshairMode,ColorType} from 'lightweight-charts';
 function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selected,onSelect,onMove,marketBars,replay,paneId='main',onCrosshair,syncedCrosshair,onVisibleRange,syncedVisibleRange,chartType='candles',chartAction,indicators=[]}){
-  const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), lineRef=React.useRef(null), areaRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null), indicatorRefs=React.useRef({}), didFit=React.useRef(false), syncingCrosshair=React.useRef(false), syncingRange=React.useRef(false), onCrosshairRef=React.useRef(onCrosshair), onVisibleRangeRef=React.useRef(onVisibleRange); onCrosshairRef.current=onCrosshair; onVisibleRangeRef.current=onVisibleRange;
+  const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), lineRef=React.useRef(null), areaRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null), indicatorRefs=React.useRef({}), seriesStateRef=React.useRef({times:null,volume:null,ma:null,chartType:null}), didFit=React.useRef(false), syncingCrosshair=React.useRef(false), syncingRange=React.useRef(false), onCrosshairRef=React.useRef(onCrosshair), onVisibleRangeRef=React.useRef(onVisibleRange); onCrosshairRef.current=onCrosshair; onVisibleRangeRef.current=onVisibleRange;
   const [draft,D]=useState(null),[tick,Tick]=useState(0),[drag,Drag]=useState(null),[multiSelected,MultiSelected]=useState(()=>selected==null?[]:[selected]);
   useEffect(()=>{if(selected==null)MultiSelected([]);else MultiSelected(ids=>ids.includes(selected)?ids:[selected])},[selected]);
   const bars=useMemo(()=>marketBars?.length?(replay?marketBars.slice(0,count):marketBars.slice(-count)):barsFor(symbol,150,basePrice).slice(0,count),[symbol,basePrice,count,marketBars,replay]);
@@ -49,13 +50,24 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   },[]);
   useEffect(()=>{
     if(!candleRef.current)return;
-    const candleData=times.map(b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close}));
-    const closeData=times.map(b=>({time:b.time,value:b.close}));
-    candleRef.current.setData(candleData);lineRef.current.setData(closeData);areaRef.current.setData(closeData);
+    const previous=seriesStateRef.current,mode=previous.times?classifyBarUpdate(previous.times,times):'reset';
+    const reset=mode==='reset'||previous.volume!==volume||previous.ma!==ma||previous.chartType!==chartType;
+    const candlePoint=b=>({time:b.time,open:b.open,high:b.high,low:b.low,close:b.close});
+    const closePoint=b=>({time:b.time,value:b.close});
+    const volumePoint=b=>({time:b.time,value:b.volume,color:b.close>=b.open?'rgba(22,199,160,.38)':'rgba(240,91,120,.38)'});
+    if(reset){
+      candleRef.current.setData(times.map(candlePoint));lineRef.current.setData(times.map(closePoint));areaRef.current.setData(times.map(closePoint));
+      volumeRef.current.setData(volume?times.map(volumePoint):[]);
+      const points=times.map((b,i)=>i>=8?({time:b.time,value:times.slice(i-8,i+1).reduce((sum,v)=>sum+v.close,0)/9}):null).filter(Boolean);
+      maRef.current.setData(ma?points:[]);
+    }else if(times.length){
+      const last=times[times.length-1];
+      candleRef.current.update(candlePoint(last));lineRef.current.update(closePoint(last));areaRef.current.update(closePoint(last));
+      if(volume)volumeRef.current.update(volumePoint(last));
+      if(ma&&times.length>=9)maRef.current.update({time:last.time,value:times.slice(-9).reduce((sum,v)=>sum+v.close,0)/9});
+    }
     candleRef.current.applyOptions({visible:chartType==='candles'});lineRef.current.applyOptions({visible:chartType==='line'});areaRef.current.applyOptions({visible:chartType==='area'});
-    volumeRef.current.setData(volume?times.map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'rgba(22,199,160,.38)':'rgba(240,91,120,.38)'})):[]);
-    const points=times.map((b,i)=>i>=8?({time:b.time,value:times.slice(i-8,i+1).reduce((sum,v)=>sum+v.close,0)/9}):null).filter(Boolean);
-    maRef.current.setData(ma?points:[]);
+    seriesStateRef.current={times,volume,ma,chartType};
     if(!didFit.current){chartRef.current?.timeScale().fitContent();didFit.current=true}
   },[times,volume,ma,chartType]);
   useEffect(()=>{const chart=chartRef.current;if(!chart)return;const active=new Set(indicators.map(item=>item.id));Object.entries(indicatorRefs.current).forEach(([id,series])=>{if(!active.has(id)){chart.removeSeries(series);delete indicatorRefs.current[id]}});indicators.forEach(item=>{let series=indicatorRefs.current[item.id];if(!series){series=chart.addSeries(LineSeries,{color:item.color||'#35c9dc',lineWidth:2,priceLineVisible:false,lastValueVisible:false,title:item.name||item.type});indicatorRefs.current[item.id]=series;}series.applyOptions({visible:item.enabled!==false,color:item.color||'#35c9dc'});series.setData(calculateIndicatorValues(times,item))});if(!chartAction)return;const scale=chart.timeScale();if(chartAction.type==='fit'){scale.fitContent();return;}const range=scale.getVisibleLogicalRange();if(!range)return;const span=Math.max(8,range.to-range.from),factor=chartAction.type==='zoomIn'?.8:1.25,nextSpan=Math.max(8,Math.min(times.length||500,span*factor)),center=(range.from+range.to)/2;scale.setVisibleLogicalRange({from:center-nextSpan/2,to:center+nextSpan/2});},[chartAction,times,indicators]);
