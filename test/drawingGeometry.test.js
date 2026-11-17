@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FIB_LEVELS, FIB_EXTENSION_LEVELS, calculateFibExtension, rayToBounds, measureRange } from '../src/core/drawingGeometry.js';
+import { FIB_LEVELS, FIB_EXTENSION_LEVELS, calculateFibExtension, rayToBounds, measureRange, countBarsBetween, formatElapsedTime } from '../src/core/drawingGeometry.js';
 
 test('Fibonacci retracement levels are standard and ordered', () => {
   assert.deepEqual(FIB_LEVELS.map(x => x.value), [0, .236, .382, .5, .618, .786, 1]);
@@ -25,7 +25,7 @@ test('extended line clips both directions', () => {
 
 test('price range reports signed delta, percentage and elapsed time', () => {
   assert.deepEqual(measureRange(100, 112, 10, 70), {
-    delta: 12, percent: 12, precision: 3, timeSpan: 60
+    delta: 12, percent: 12, precision: 3, timeSpan: 60, barCount: 0
   });
   assert.equal(measureRange(0, 2).percent, 0);
 });
@@ -35,4 +35,22 @@ test('three-point Fibonacci extension projects standard ratios from the third an
   assert.equal(calculateFibExtension(100, 120, 110, 1), 130);
   assert.equal(calculateFibExtension(100, 120, 110, 1.618), 142.36);
   assert.equal(calculateFibExtension(120, 100, 110, 1.618), 77.64);
+});
+
+
+test('bar measurement counts candles inclusively and ignores out-of-range timestamps', () => {
+  assert.equal(countBarsBetween([0, 60, 120, 180, 240], 60, 180), 3);
+  assert.equal(countBarsBetween([{time: 60}, {time: 120}, {time: 180}], 180, 60), 3);
+  assert.equal(countBarsBetween([0, 60, 120], 61, 119), 0);
+});
+
+test('elapsed time formatter uses readable day, hour, minute and second units', () => {
+  assert.equal(formatElapsedTime(0), '0s');
+  assert.equal(formatElapsedTime(125), '2m');
+  assert.equal(formatElapsedTime(3660), '1h 1m');
+  assert.equal(formatElapsedTime(90000), '1d 1h');
+});
+
+test('price measurement includes candle count when candle timestamps are provided', () => {
+  assert.equal(measureRange(10, 12, 60, 180, [0, 60, 120, 180, 240]).barCount, 3);
 });
