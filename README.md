@@ -74,7 +74,7 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Functional zoom in/out controls using the chart's visible logical range.
 - [x] Fit-to-data control for all currently loaded bars.
 - [x] Candlestick, close-line and area chart display modes (main chart).
-- [x] Indicator manager with independently configurable, multiple SMA, EMA and VWAP instances (period, visibility and color; main chart overlays); SMA overlays update from the latest rolling window during live candle ticks.
+- [x] Indicator manager with independently configurable, multiple SMA, EMA and VWAP instances (period, visibility and color; main chart overlays); SMA overlays update from the latest rolling window during live candle ticks, while EMA and UTC-session VWAP use cached prior-candle state to update only the latest point; historical corrections trigger safe full recalculation.
 - [x] Distraction-free/full-screen chart mode for the complete chart workspace, with browser fullscreen state tracking and an exit control.
 - [x] Named workspaces: save new, overwrite current, rename, duplicate, delete and restore.
 - [x] Workspace snapshots include main chart settings, indicators, drawings, linked-chart preferences, layout, and saved secondary-pane symbols/timeframes/drawings.
@@ -92,13 +92,13 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ### Quality and release
 - [x] Unit tests for deterministic demo OHLC generation and price anchoring.
-- [x] Unit tests for SMA, EMA and session-based VWAP calculations, including latest-value SMA parity with full-series calculation.
+- [x] Unit tests for SMA, EMA and session-based VWAP calculations, including latest-value SMA parity and incremental EMA/VWAP parity across repeated ticks, appends, UTC session boundaries and historical resets.
 - [x] GitHub Actions dependency install, safe npm audit remediation, actionable high/critical audit gate, unit tests and production build.
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
 - [x] 50k-candle SMA correctness regression test and informational SMA/EMA/VWAP benchmark in CI.
 - [x] Spatial hit-test broad-phase correctness stress test with 5,000 drawings (timing remains informational, not a brittle CI gate).
-- [ ] Profile full SVG rendering and hit-test latency with large drawings; optimize incremental EMA/VWAP recalculation.
+- [ ] Profile full SVG rendering and hit-test latency with large drawings; measure incremental indicator performance on large live histories.
 - [ ] Error boundaries, diagnostics and import/export validation.
 - [ ] Windows install/launch package and user documentation.
 - [ ] Release checklist and verified downloadable build.
