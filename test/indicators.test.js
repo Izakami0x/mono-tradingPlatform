@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {calculateIndicatorValues} from '../src/core/indicators.js';
+import {calculateIndicatorValues,calculateLatestSMAValue} from '../src/core/indicators.js';
 
 const bars=closes=>closes.map((close,index)=>({time:1700000000+index*60,open:close,high:close+1,low:close-1,close,volume:10}));
 
@@ -27,4 +27,12 @@ test('VWAP weights typical price by volume and resets at UTC day boundary',()=>{
 test('empty and short input are safe',()=>{
   assert.deepEqual(calculateIndicatorValues([],{type:'SMA',period:5}),[]);
   assert.deepEqual(calculateIndicatorValues(bars([1,2]),{type:'SMA',period:5}),[]);
+});
+
+test('latest SMA calculation matches the final full-series value',()=>{
+  const input=bars([3,4,5,6,7,8]);
+  const latest=calculateLatestSMAValue(input,{period:4});
+  const full=calculateIndicatorValues(input,{type:'SMA',period:4});
+  assert.deepEqual(latest,full.at(-1));
+  assert.equal(calculateLatestSMAValue(input.slice(0,2),{period:4}),null);
 });
