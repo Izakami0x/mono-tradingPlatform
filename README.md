@@ -23,10 +23,10 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Instrument-specific illustrative OHLC price scaling.
 - [x] Searchable instrument watchlist and timeframe selector.
 - [x] Resizable chart container and responsive chart rendering.
-- [ ] Live exchange market-data adapter (public market data only).
+- [x] Public Binance USDⓈ-M Futures REST history and WebSocket kline adapter (no credentials/order endpoints).
 - [ ] Historical candle retrieval and pagination.
 - [ ] Correct exchange timestamps and timezone controls.
-- [ ] Connection status, reconnect/backoff and stale-data handling.
+- [ ] Connection status, reconnect/backoff and stale-data handling (live/reconnecting/demo status and exponential reconnect implemented; stale-feed detection remains).
 
 ### Drawing engine
 - [x] Chart time/price anchored drawing coordinates.
@@ -83,9 +83,9 @@ This checklist is the source of truth for implementation progress. Mark an item 
 
 ## Current implementation and data limitations
 
-The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes deterministic illustrative OHLC data, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, basic drawing selection/movement/style editing and undo/redo, replay controls, workspace export, and inspector/object-tree controls.
+The frontend uses React, Vite, and TradingView's open-source Lightweight Charts engine for native candlestick, volume histogram, moving-average, crosshair, price-scale, and time-scale rendering. It includes a public exchange market-data adapter with illustrative fallback, selectable instruments and timeframes, a chart-coordinate drawing overlay, IndexedDB-backed drawing persistence with localStorage fallback, basic drawing selection/movement/style editing and undo/redo, replay controls, workspace export, and inspector/object-tree controls.
 
-**Market data is illustrative, not live.** The application does not yet connect to an exchange feed. Replay currently steps through the local illustrative bar series. No order-entry or broker functionality is included.
+**Market data:** MONO now attempts to load public Binance USDⓈ-M Futures candles and subscribe to its public kline WebSocket, without API keys or trading permissions. If the exchange is unreachable or blocks the connection, the chart falls back to deterministic illustrative data and labels that fallback. Replay uses the currently loaded bar series. No order-entry or broker functionality is included.
 
 Some controls and roadmap items remain incomplete. The checklist above distinguishes working functionality from planned work.
 
