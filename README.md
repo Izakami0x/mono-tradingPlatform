@@ -8,7 +8,7 @@ MONO is a charting-first technical-analysis workspace. The initial product is br
 - Left navigation rail and searchable multi-instrument watchlist.
 - Chart-edge drawing toolbar.
 - Docked or floating inspector; side panels can be independently collapsed, including hiding the full inspector.
-- Single-chart default workspace with functional two- and four-chart layouts.
+- Single-chart default workspace with functional two-, four-, six- and eight-chart layouts.
 - Local persistence for workspace preferences and drawings.
 - Bar replay controls and chart overlays.
 
@@ -55,8 +55,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Docked/floating inspector modes.
 - [x] Local workspace preference persistence.
 - [x] Workspace JSON export.
-- [x] Real independent multi-chart panes (2/4 layouts); 2- and 4-chart workspaces render separate charts.
-- [x] Per-pane symbol, timeframe, overlays and drawing state (each secondary pane has its own market stream, timeframe, overlays and persisted drawings).
+- [x] Real independent multi-chart panes (2/4/6/8 layouts); each layout renders separate charts.
+- [x] Per-pane symbol, timeframe, overlays and drawing state (each secondary pane has its own market stream, selectable timeframe/symbol, overlays, editable drawings and persisted pane settings).
 - [ ] Linked crosshair, symbol and timeframe options.
 - [ ] Functional zoom, fit-content and chart-type controls.
 - [ ] Indicator configuration and multiple indicator instances.
