@@ -12,7 +12,7 @@ function Chart({symbol,tf,tool,drawings,onDraw,volume,ma,count,selected,onSelect
   const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null);
   const [draft,D]=useState(null), [cursor,C]=useState(null);
   const bars=useMemo(()=>barsFor(symbol,150).slice(0,count),[symbol,count]);
-  const times=useMemo(()=>bars.map((bar,index)=>({...bar,time:1700000000+index*60})),[bars]);
+  const times=useMemo(()=>bars.map((bar,index)=>({...bar,time:1700000000+index*({ '1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1h':3600,'2h':7200,'4h':14400,'1D':86400,'1W':604800,'1M':2592000 }[tf]||900)})),[bars]);
   useEffect(()=>{
     if(!host.current)return;
     const chart=createChart(host.current,{
