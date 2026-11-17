@@ -46,6 +46,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Three-anchor Fibonacci extension with 0 / 61.8 / 100 / 161.8 / 261.8% projection levels and editable anchors.
 - [x] Undo/redo history for drawing changes.
 - [x] Geometry-aware hit testing for trend lines, horizontal lines, rectangles, channels, text and brush strokes.
+- [x] Spatial broad-phase hit-test index with reverse-layer candidate ordering and overflow handling for long drawings.
+- [x] 5,000-object spatial-index correctness regression test.
 - [x] Anchor handles and endpoint editing for drawing endpoints, including diagonal rectangle resizing.
 - [x] Drawing visibility and lock controls in the object tree.
 - [x] Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Y, Delete/Backspace and Escape; pointer cancellation discards unfinished drawing edits.
@@ -95,7 +97,8 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [ ] Automated component and browser interaction tests.
 - [ ] Accessibility and keyboard-navigation pass.
 - [x] 50k-candle SMA correctness regression test and informational SMA/EMA/VWAP benchmark in CI.
-- [ ] Performance profiling with many drawings and incremental EMA/VWAP recalculation.
+- [x] Spatial hit-test broad-phase correctness stress test with 5,000 drawings (timing remains informational, not a brittle CI gate).
+- [ ] Profile full SVG rendering and hit-test latency with large drawings; optimize incremental EMA/VWAP recalculation.
 - [ ] Error boundaries, diagnostics and import/export validation.
 - [ ] Windows install/launch package and user documentation.
 - [ ] Release checklist and verified downloadable build.
