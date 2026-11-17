@@ -61,3 +61,28 @@
 .indicator-color{width:28px;height:23px;padding:1px;background:transparent;border:1px solid #29465c;border-radius:3px}
 .indicator-row>button{margin-left:auto;color:#d38a98;padding:4px}
 .indicator-empty{padding:8px 2px;color:#718ba0;font-size:10px}
+
+
+.workspace-modal-backdrop{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:rgba(1,8,15,.72);backdrop-filter:blur(4px)}
+.workspace-modal{width:min(720px,100%);max-height:min(680px,90vh);display:flex;flex-direction:column;background:#0d1e2d;border:1px solid #29465c;border-radius:8px;box-shadow:0 24px 80px #000c;color:#c6d7e4;overflow:hidden}
+.workspace-modal>header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #20394d}
+.workspace-modal>header div{display:flex;flex-direction:column;gap:4px}
+.workspace-modal>header b{font-size:11px;letter-spacing:1px;color:#e2edf5}
+.workspace-modal>header small,.workspace-modal footer span{font-size:10px;color:#7791a5}
+.workspace-modal>header button{color:#8ea7ba;padding:5px}
+.workspace-save-row{display:flex;gap:8px;padding:14px 18px;border-bottom:1px solid #20394d}
+.workspace-save-row input{flex:1;min-width:0;background:#081725;border:1px solid #29465c;border-radius:4px;padding:9px 10px;color:#e2edf5;font:11px Inter,sans-serif;outline:none}
+.workspace-save-row input:focus{border-color:#35c9dc}
+.workspace-save-row>button,.workspace-modal footer>button{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;background:#124258;border:1px solid #236278;border-radius:4px;color:#70d9e7;font-size:10px}
+.workspace-list{overflow:auto;padding:8px 18px;min-height:110px}
+.workspace-list>p{padding:22px 8px;text-align:center;color:#7892a7;font-size:11px}
+.workspace-entry{display:flex;align-items:center;gap:6px;padding:10px 0;border-bottom:1px solid #1c3346}
+.workspace-entry-active{background:rgba(18,66,88,.16)}
+.workspace-entry-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.workspace-entry-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d8e6f0;font-size:11px}
+.workspace-entry-info small{color:#7892a7;font-size:9px}
+.workspace-entry>button{padding:6px 8px;border:1px solid #29465c;border-radius:3px;color:#91aabd;font-size:9px}
+.workspace-entry>button:first-of-type{color:#65d5e4;border-color:#236278;background:#103246}
+.workspace-entry>button.workspace-delete{color:#d38a98}
+.workspace-modal>footer{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid #20394d}
+@media(max-width:600px){.workspace-entry{flex-wrap:wrap}.workspace-entry-info{flex-basis:100%;padding-bottom:5px}.workspace-save-row{flex-direction:column}}
