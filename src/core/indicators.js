@@ -29,3 +29,11 @@ export function calculateIndicatorValues(bars,{type='SMA',period=20}={}) {
   });
   return result;
 }
+
+export function calculateLatestSMAValue(bars,{period=20}={}) {
+  const safePeriod=Math.max(2,Math.min(500,Number(period)||20));
+  if(!Array.isArray(bars)||bars.length<safePeriod)return null;
+  const window=bars.slice(-safePeriod);
+  const sum=window.reduce((total,bar)=>total+Number(bar.close),0);
+  return {time:window.at(-1).time,value:sum/safePeriod};
+}
