@@ -39,3 +39,9 @@ export function measureRange(startPrice, endPrice, startTime = 0, endTime = 0) {
   const precision = magnitude >= 1000 ? 2 : magnitude >= 1 ? 3 : 5;
   return { delta, percent, precision, timeSpan: Math.abs(endTime - startTime) };
 }
+
+export const FIB_EXTENSION_LEVELS = [0, 0.618, 1, 1.618, 2.618];
+
+export function calculateFibExtension(anchorA, anchorB, anchorC, ratio) {
+  return anchorC + (anchorB - anchorA) * ratio;
+}
