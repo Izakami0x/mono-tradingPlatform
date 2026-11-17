@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDrawingHitIndex, queryDrawingHitIndex } from '../src/core/drawingHitIndex.js';
+import { buildDrawingHitIndex, queryDrawingHitIndex, queryDrawingsInViewport } from '../src/core/drawingHitIndex.js';
 import { FIB_LEVELS, FIB_EXTENSION_LEVELS, calculateFibExtension, rayToBounds, measureRange, countBarsBetween, formatElapsedTime } from '../src/core/drawingGeometry.js';
 
 test('Fibonacci retracement levels are standard and ordered', () => {
@@ -90,4 +90,23 @@ test('drawing spatial index handles large object counts and oversized drawings',
   assert.ok(index.overflow.some(entry => entry.item.id === 'long-ray'));
   assert.deepEqual(queryDrawingHitIndex(index, 18, 18).map(item => item.id), ['long-ray', 0]);
   assert.ok(queryDrawingHitIndex(index, 9000, 6000).some(item => item.id === 'long-ray'));
+});
+
+test('viewport query excludes offscreen drawings but keeps intersecting and overscanned objects',()=>{
+  const drawings=[
+    {id:'visible',bounds:{left:10,top:10,right:40,bottom:40}},
+    {id:'partial',bounds:{left:390,top:20,right:430,bottom:60}},
+    {id:'near',bounds:{left:-70,top:20,right:-40,bottom:60}},
+    {id:'offscreen',bounds:{left:900,top:900,right:950,bottom:950}}
+  ];
+  const index=buildDrawingHitIndex(drawings,item=>item.bounds,64);
+  assert.deepEqual(queryDrawingsInViewport(index,400,300,64).map(item=>item.id),['visible','partial','near']);
+});
+
+test('viewport culling remains selective with 5000 drawings',()=>{
+  const drawings=Array.from({length:5000},(_,i)=>({id:i,bounds:{left:(i%100)*200,top:Math.floor(i/100)*160,right:(i%100)*200+30,bottom:Math.floor(i/100)*160+30}}));
+  const index=buildDrawingHitIndex(drawings,item=>item.bounds,128,256);
+  const visible=queryDrawingsInViewport(index,800,600,0);
+  assert.ok(visible.length<30);
+  assert.ok(visible.every(item=>item.bounds.left<=800&&item.bounds.top<=600));
 });
