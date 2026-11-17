@@ -91,7 +91,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     return <line key={d.id} {...props} x1={a.x} y1={a.y} x2={b.x} y2={b.y}/>;
   };
   const plotWidth=chartRef.current?.timeScale().width?.()||host.current?.clientWidth||0;
-  return <div className="chart-canvas"><div ref={host} className="chart-engine"/><svg className={'drawing-overlay '+(['cursor','crosshair'].includes(tool)?'cursor-tool':'drawing-tool')} style={{width:plotWidth||'100%'}} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={finish}>
+  return <div className="chart-canvas"><div ref={host} className="chart-engine"/><svg className={'drawing-overlay '+(tool==='cursor'?'selection-tool':tool==='crosshair'?'cursor-tool':'drawing-tool')} style={{width:plotWidth||'100%'}} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={finish}>
     {drawings.map(renderShape)}
     {draft&&(()=>{const a=xyFor(draft.a),b=xyFor(draft.b);return a&&b?<line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#35c9dc" strokeDasharray="4 3"/>:null})()}
   </svg><div className="chart-watermark">{symbol}<span> · </span>{tf}</div><div className="chart-ohlc">Professional chart engine · {count} bars</div></div>
