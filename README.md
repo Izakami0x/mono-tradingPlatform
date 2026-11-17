@@ -39,7 +39,9 @@ This checklist is the source of truth for implementation progress. Mark an item 
 - [x] Drawing color, opacity and line-width properties.
 - [x] Undo/redo history for drawing changes.
 - [ ] Reliable hit testing for every drawing geometry.
-- [ ] Anchor handles and endpoint editing.
+- [x] Anchor handles and endpoint editing for drawing endpoints.
+- [x] Drawing visibility and lock controls in the object tree.
+- [x] Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Y, Delete/Backspace and Escape.
 - [ ] Rectangle/channel resize and geometry editing.
 - [ ] Drawing lock, hide/show and z-order controls.
 - [ ] Multi-select and group operations.
