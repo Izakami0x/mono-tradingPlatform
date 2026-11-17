@@ -10,12 +10,12 @@ export function normalizeKline(row) {
   return bar;
 }
 
-export async function fetchFuturesKlines(symbol, interval, {limit=500, signal}={}) {
+export async function fetchFuturesKlines(symbol, interval, {limit=500, signal, startTime, endTime}={}) {
   if (!/^[A-Z0-9]{3,20}$/.test(symbol)) throw new TypeError('Invalid market symbol');
   if (!VALID_INTERVALS.has(interval)) throw new TypeError('Unsupported candle interval');
   if (!Number.isInteger(limit) || limit < 1 || limit > 1500) throw new RangeError('Kline limit must be between 1 and 1500');
   const url = new URL('/fapi/v1/klines', REST_BASE);
-  url.search = new URLSearchParams({symbol,interval,limit:String(limit)}).toString();
+  const params={symbol,interval,limit:String(limit)};if(Number.isFinite(startTime))params.startTime=String(startTime);if(Number.isFinite(endTime))params.endTime=String(endTime);url.search = new URLSearchParams(params).toString();
   const response = await fetch(url, {signal,headers:{Accept:'application/json'}});
   if (!response.ok) throw new Error('Market history request failed ('+response.status+')');
   const rows = await response.json();
@@ -25,14 +25,15 @@ export async function fetchFuturesKlines(symbol, interval, {limit=500, signal}={
 
 export function subscribeFuturesKlines(symbol, interval, onBar, onStatus=()=>{}) {
   if (!/^[A-Z0-9]{3,20}$/.test(symbol) || !VALID_INTERVALS.has(interval)) throw new TypeError('Invalid market stream');
-  let socket=null, stopped=false, retry=0, timer=null;
+  let socket=null, stopped=false, retry=0, timer=null,lastMessageAt=0;const watchdog=setInterval(()=>{if(!stopped&&socket?.readyState===1&&lastMessageAt&&Date.now()-lastMessageAt>15000)onStatus('stale')},5000);
   const connect=()=>{
     if(stopped)return;
     onStatus('connecting');
     try {
       socket=new WebSocket(WS_BASE+'/'+symbol.toLowerCase()+'@kline_'+interval);
-      socket.onopen=()=>{retry=0;onStatus('live')};
+      socket.onopen=()=>{retry=0;lastMessageAt=Date.now();onStatus('live')};
       socket.onmessage=event=>{
+        lastMessageAt=Date.now();
         try {
           const message=JSON.parse(event.data), k=message.k;
           if(!k)return;
@@ -56,8 +57,28 @@ export function subscribeFuturesKlines(symbol, interval, onBar, onStatus=()=>{})
   connect();
   return ()=>{
     stopped=true;
-    if(timer)clearTimeout(timer);
+    if(timer)clearTimeout(timer);clearInterval(watchdog);
     if(socket){socket.onclose=null;socket.close();socket=null}
     onStatus('disconnected');
   };
+}
+
+const INTERVAL_MS = {'1m':60000,'3m':180000,'5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'2h':7200000,'4h':14400000,'1d':86400000,'1w':604800000,'1M':2592000000};
+
+export async function fetchHistoricalKlines(symbol, interval, {limit=1500, signal}={}) {
+  if(!Number.isInteger(limit)||limit<1||limit>20000)throw new RangeError('Historical bar count must be between 1 and 20000');
+  const step=INTERVAL_MS[interval];
+  if(!step)throw new TypeError('Unsupported candle interval');
+  const result=[];
+  let startTime;
+  while(result.length<limit) {
+    const batch=await fetchFuturesKlines(symbol,interval,{limit:Math.min(1500,limit-result.length),signal,startTime});
+    if(!batch.length)break;
+    result.push(...batch);
+    const nextStart=batch[batch.length-1].time*1000+step;
+    if(!Number.isFinite(nextStart)||nextStart<= (startTime??0))break;
+    startTime=nextStart;
+    if(batch.length<Math.min(1500,limit-result.length+batch.length))break;
+  }
+  return result.slice(0,limit);
 }
