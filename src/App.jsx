@@ -13,7 +13,8 @@ function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{retur
 import {createChart,CandlestickSeries,HistogramSeries,LineSeries,AreaSeries,CrosshairMode,ColorType} from 'lightweight-charts';
 function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selected,onSelect,onMove,marketBars,replay,paneId='main',onCrosshair,syncedCrosshair,onVisibleRange,syncedVisibleRange,chartType='candles',chartAction,indicators=[]}){
   const host=React.useRef(null), chartRef=React.useRef(null), candleRef=React.useRef(null), lineRef=React.useRef(null), areaRef=React.useRef(null), volumeRef=React.useRef(null), maRef=React.useRef(null), indicatorRefs=React.useRef({}), didFit=React.useRef(false), syncingCrosshair=React.useRef(false), syncingRange=React.useRef(false), onCrosshairRef=React.useRef(onCrosshair), onVisibleRangeRef=React.useRef(onVisibleRange); onCrosshairRef.current=onCrosshair; onVisibleRangeRef.current=onVisibleRange;
-  const [draft,D]=useState(null),[tick,Tick]=useState(0),[drag,Drag]=useState(null);
+  const [draft,D]=useState(null),[tick,Tick]=useState(0),[drag,Drag]=useState(null),[multiSelected,MultiSelected]=useState(()=>selected==null?[]:[selected]);
+  useEffect(()=>{if(selected==null)MultiSelected([]);else MultiSelected(ids=>ids.includes(selected)?ids:[selected])},[selected]);
   const bars=useMemo(()=>marketBars?.length?(replay?marketBars.slice(0,count):marketBars.slice(-count)):barsFor(symbol,150,basePrice).slice(0,count),[symbol,basePrice,count,marketBars,replay]);
   const interval=({'1m':60,'3m':180,'5m':300,'15m':900,'30m':1800,'1h':3600,'2h':7200,'4h':14400,'1D':86400,'1W':604800,'1M':2592000}[tf]||900);
   const times=useMemo(()=>bars.map((bar,index)=>({...bar,time:bar.time??1700000000+index*interval})),[bars,interval]);
@@ -72,14 +73,38 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
     const x=chart.timeScale().timeToCoordinate(p.time),y=series.priceToCoordinate(p.price);
     return x==null||y==null?null:{x,y};
   };
+  const distanceToSegment=(p,a,b)=>{const dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;if(!len)return Math.hypot(p.x-a.x,p.y-a.y);const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))};
+  const hitTest=(d,local)=>{
+    if(d.hidden)return null;
+    const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});if(!a||!b)return null;
+    if(!d.locked){if(Math.hypot(local.x-a.x,local.y-a.y)<=10)return 'anchor1';if(Math.hypot(local.x-b.x,local.y-b.y)<=10)return 'anchor2'}
+    if(d.type==='horizontal')return Math.abs(local.y-a.y)<=7?'move':null;
+    if(d.type==='rectangle'){
+      const left=Math.min(a.x,b.x),right=Math.max(a.x,b.x),top=Math.min(a.y,b.y),bottom=Math.max(a.y,b.y),inside=local.x>=left&&local.x<=right&&local.y>=top&&local.y<=bottom;
+      const edge=local.x>=left-6&&local.x<=right+6&&local.y>=top-6&&local.y<=bottom+6&&(Math.abs(local.x-left)<=7||Math.abs(local.x-right)<=7||Math.abs(local.y-top)<=7||Math.abs(local.y-bottom)<=7);
+      return inside||edge?'move':null;
+    }
+    if(d.type==='text')return Math.hypot(local.x-a.x,local.y-a.y)<=20?'move':null;
+    if(d.type==='brush'&&d.points?.length>1){const pts=d.points.map(x=>xyFor(x)).filter(Boolean);return pts.some((point,index)=>index>0&&distanceToSegment(local,pts[index-1],point)<=7)?'move':null}
+    if(d.type==='channel'){
+      const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,offset=Math.max(12,Math.min(90,Math.abs(dx)*.12)),ox=-dy/len*offset,oy=dx/len*offset;
+      return distanceToSegment(local,a,b)<=7||distanceToSegment(local,{x:a.x+ox,y:a.y+oy},{x:b.x+ox,y:b.y+oy})<=7||distanceToSegment(local,a,{x:a.x+ox,y:a.y+oy})<=7?'move':null;
+    }
+    return distanceToSegment(local,a,b)<=8?'move':null;
+  };
   const begin=e=>{
     const p=pointFromEvent(e);if(!p)return;
     if(tool==='cursor'){
-      const local={x:e.clientX-e.currentTarget.getBoundingClientRect().left,y:e.clientY-e.currentTarget.getBoundingClientRect().top};
-      const active=drawings.find(d=>d.id===selected&&!d.locked);
-      if(active){const a=xyFor({time:active.t1,price:active.p1}),b=xyFor({time:active.t2,price:active.p2});if(a&&Math.hypot(local.x-a.x,local.y-a.y)<=10){Drag({id:active.id,start:p,original:active,current:active,mode:'anchor1'});e.currentTarget.setPointerCapture(e.pointerId);return}if(b&&Math.hypot(local.x-b.x,local.y-b.y)<=10){Drag({id:active.id,start:p,original:active,current:active,mode:'anchor2'});e.currentTarget.setPointerCapture(e.pointerId);return}}
-      const hit=[...drawings].reverse().find(d=>{if(d.hidden)return false;const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});if(!a||!b)return false;const minX=Math.min(a.x,b.x)-9,maxX=Math.max(a.x,b.x)+9,minY=Math.min(a.y,b.y)-9,maxY=Math.max(a.y,b.y)+9;return local.x>=minX&&local.x<=maxX&&local.y>=minY&&local.y<=maxY});
-      if(hit){onSelect(hit.id);if(!hit.locked){Drag({id:hit.id,start:p,original:hit,current:hit,mode:'move'});e.currentTarget.setPointerCapture(e.pointerId)}}else onSelect(null);
+      const rect=e.currentTarget.getBoundingClientRect(),local={x:e.clientX-rect.left,y:e.clientY-rect.top};
+      const hit=[...drawings].reverse().map(d=>({drawing:d,mode:hitTest(d,local)})).find(item=>item.mode);
+      if(hit){
+        const id=hit.drawing.id;
+        let ids=multiSelected;
+        if(e.shiftKey){ids=ids.includes(id)?ids.filter(x=>x!==id):[...ids,id];MultiSelected(ids);onSelect(ids.at(-1)??null);return}
+        if(!ids.includes(id)){ids=[id];MultiSelected(ids);onSelect(id)}
+        const originals=drawings.filter(d=>ids.includes(d.id)&&!d.locked);
+        if(originals.length){Drag({id,start:p,original:hit.drawing,current:hit.drawing,mode:hit.mode,group:hit.mode==='move'&&ids.length>1?originals:null});e.currentTarget.setPointerCapture(e.pointerId)}
+      }else{onSelect(null);MultiSelected([])}
       return;
     }
     if(tool==='crosshair')return;
@@ -88,7 +113,13 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   const move=e=>{
     const p=pointFromEvent(e);if(!p)return;
     if(draft)D(v=>({...v,b:p,points:tool==='brush'?[...v.points,p]:v.points}));
-    if(drag){const dt=p.time-drag.start.time,dp=p.price-drag.start.price,base=drag.original;let current;if(drag.mode==='anchor1')current={...base,t1:p.time,p1:p.price};else if(drag.mode==='anchor2')current={...base,t2:p.time,p2:p.price};else current={...base,t1:base.t1+dt,t2:base.t2+dt,p1:base.p1+dp,p2:base.p2+dp,points:base.points?.map(q=>({time:q.time+dt,price:q.price+dp}))};Drag(v=>({...v,current}))}
+    if(drag){
+      const dt=p.time-drag.start.time,dp=p.price-drag.start.price,base=drag.original;let current;
+      if(drag.mode==='anchor1')current={...base,t1:p.time,p1:p.price};
+      else if(drag.mode==='anchor2')current={...base,t2:p.time,p2:p.price};
+      else current={...base,t1:base.t1+dt,t2:base.t2+dt,p1:base.p1+dp,p2:base.p2+dp,points:base.points?.map(q=>({time:q.time+dt,price:q.price+dp}))};
+      Drag(v=>({...v,current,delta:{dt,dp}}));
+    }
   };
   const finish=e=>{
     if(draft){const p=pointFromEvent(e)||draft.b;const tiny=Math.abs(p.time-draft.a.time)<interval/3&&Math.abs(p.price-draft.a.price)<basePrice*.00001;
@@ -97,7 +128,11 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
       else if(!tiny||tool==='horizontal')onDraw({id:Date.now()+Math.random(),type:tool,t1:draft.a.time,t2:end.time,p1:draft.a.price,p2:end.price,points:tool==='brush'?draft.points:undefined,color:'#35c9dc',text:''});
       D(null);
     }
-    if(drag){if(drag.current&&JSON.stringify(drag.current)!==JSON.stringify(drag.original))onMove(drag.id,drag.current);Drag(null)}
+    if(drag){
+      if(drag.group&&drag.delta){drag.group.forEach(item=>{const {dt,dp}=drag.delta;onMove(item.id,{...item,t1:item.t1+dt,t2:item.t2+dt,p1:item.p1+dp,p2:item.p2+dp,points:item.points?.map(q=>({time:q.time+dt,price:q.price+dp}))})})}
+      else if(drag.current&&JSON.stringify(drag.current)!==JSON.stringify(drag.original))onMove(drag.id,drag.current);
+      Drag(null);
+    }
   };
   const renderShape=d=>{
     const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});if(!a||!b)return null;
@@ -111,7 +146,7 @@ function Chart({symbol,basePrice,tf,tool,drawings,onDraw,volume,ma,count,selecte
   };
   const plotWidth=chartRef.current?.timeScale().width?.()||host.current?.clientWidth||0;
   return <div className="chart-canvas"><div ref={host} className="chart-engine"/><svg className={'drawing-overlay '+(tool==='cursor'?'selection-tool':tool==='crosshair'?'cursor-tool':'drawing-tool')} style={{width:plotWidth||'100%'}} onPointerDown={begin} onPointerMove={move} onPointerUp={finish} onPointerCancel={finish}>
-    {drawings.filter(d=>!d.hidden).map(d=>renderShape(drag?.id===d.id&&drag.current?drag.current:d))}{selected!=null&&(()=>{const d=drawings.find(x=>x.id===selected&&!x.hidden&&!x.locked);if(!d)return null;const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});return a&&b?<g className="drawing-handles"><circle cx={a.x} cy={a.y} r="5"/><circle cx={b.x} cy={b.y} r="5"/></g>:null})()}
+    {drawings.filter(d=>!d.hidden).map(d=>renderShape(drag?.id===d.id&&drag.current?drag.current:d))}{multiSelected.map(id=>drawings.find(d=>d.id===id&&!d.hidden&&!d.locked)).filter(Boolean).map(d=>{const a=xyFor({time:d.t1,price:d.p1}),b=xyFor({time:d.t2,price:d.p2});return a&&b?<g className="drawing-handles" key={d.id}><circle cx={a.x} cy={a.y} r="5"/><circle cx={b.x} cy={b.y} r="5"/></g>:null})}
     {draft&&(()=>{const a=xyFor(draft.a),b=xyFor(draft.b);return a&&b?<line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#35c9dc" strokeDasharray="4 3"/>:null})()}
   </svg><div className="chart-watermark">{symbol}<span> · </span>{tf}</div><div className="chart-ohlc">Professional chart engine · {count} bars</div></div>
 }
