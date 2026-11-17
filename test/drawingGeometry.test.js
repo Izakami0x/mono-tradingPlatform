@@ -54,3 +54,13 @@ test('elapsed time formatter uses readable day, hour, minute and second units', 
 test('price measurement includes candle count when candle timestamps are provided', () => {
   assert.equal(measureRange(10, 12, 60, 180, [0, 60, 120, 180, 240]).barCount, 3);
 });
+
+
+test('chart data update classifier distinguishes last-candle updates, appends and resets', async () => {
+  const { classifyBarUpdate } = await import('../src/core/chartData.js');
+  const old = [{time: 1}, {time: 2}, {time: 3}];
+  assert.equal(classifyBarUpdate(old, [{time: 1}, {time: 2}, {time: 3}]), 'last');
+  assert.equal(classifyBarUpdate(old, [{time: 1}, {time: 2}, {time: 3}, {time: 4}]), 'append');
+  assert.equal(classifyBarUpdate(old, [{time: 2}, {time: 3}, {time: 4}]), 'reset');
+  assert.equal(classifyBarUpdate([], [{time: 1}]), 'reset');
+});
