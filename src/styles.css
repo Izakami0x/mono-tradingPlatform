@@ -102,3 +102,8 @@
 .drawing-handles circle{fill:#08131f;stroke:#54d7e5;stroke-width:1.6;vector-effect:non-scaling-stroke}
 .drawing-overlay.selection-tool{cursor:default}
 .drawing-overlay.selection-tool:active{cursor:grabbing}
+
+/* Expanded drawing palette: keep every tool reachable in compact layouts. */
+.drawing-rail{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#29465c transparent}
+.drawing-rail>button{flex:none}
+.drawing-rail>button[title="Fibonacci retracement"],.drawing-rail>button[title="Price range"]{color:#72d8e5}
