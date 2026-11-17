@@ -9,7 +9,9 @@ test('Fibonacci retracement levels are standard and ordered', () => {
 test('ray clips forward from its anchor to chart bounds', () => {
   const result = rayToBounds({x:20,y:80},{x:40,y:60},100,100,false);
   assert.ok(result);
-  assert.ok(result[0].x >= 20 - 1e-6);
+  assert.equal(result[0].x, 20);
+  assert.equal(result[0].y, 80);
+  assert.ok(result[1].x > result[0].x);
   assert.ok(result[1].x <= 100);
   assert.ok(result.every(p => p.x >= 0 && p.x <= 100 && p.y >= 0 && p.y <= 100));
 });
