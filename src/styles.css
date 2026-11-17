@@ -107,3 +107,8 @@
 .drawing-rail{overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#29465c transparent}
 .drawing-rail>button{flex:none}
 .drawing-rail>button[title="Fibonacci retracement"],.drawing-rail>button[title="Price range"]{color:#72d8e5}
+
+/* Annotation editor and drawing-style controls */
+.annotation-editor{display:block;width:100%;min-height:76px;resize:vertical;background:#081725;border:1px solid #29465c;border-radius:4px;padding:7px;color:#d8e5f0;font:11px Inter,sans-serif;line-height:1.5}
+.properties select{max-width:100%;background:#102438;border:1px solid #29465c;border-radius:3px;color:#c8d9e6;padding:5px;font-size:10px}
+.drawing-rail>button[title="Fibonacci extension (3 points)"]{color:#72d8e5}
