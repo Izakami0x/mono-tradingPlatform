@@ -2,7 +2,7 @@ const REST_BASE = 'https://fapi.binance.com';
 const WS_BASE = 'wss://fstream.binance.com/ws';
 const VALID_INTERVALS = new Set(['1m','3m','5m','15m','30m','1h','2h','4h','1d','1w','1M']);
 
-function normalizeKline(row) {
+export function normalizeKline(row) {
   if (!Array.isArray(row) || row.length < 6) throw new TypeError('Invalid exchange kline payload');
   const [openTime, open, high, low, close, volume] = row;
   const bar = { time: Math.floor(Number(openTime) / 1000), open:Number(open), high:Number(high), low:Number(low), close:Number(close), volume:Number(volume) };
