@@ -32,12 +32,32 @@ export function rayToBounds(a, b, width, height, extendBoth = false) {
   return [{ x: a.x, y: a.y }, { x: end.x, y: end.y }];
 }
 
-export function measureRange(startPrice, endPrice, startTime = 0, endTime = 0) {
+export function countBarsBetween(candleTimes = [], startTime = 0, endTime = 0) {
+  const low = Math.min(Number(startTime), Number(endTime));
+  const high = Math.max(Number(startTime), Number(endTime));
+  return candleTimes.reduce((count, item) => {
+    const time = typeof item === 'object' && item !== null ? Number(item.time) : Number(item);
+    return count + (Number.isFinite(time) && time >= low && time <= high ? 1 : 0);
+  }, 0);
+}
+
+export function formatElapsedTime(seconds = 0) {
+  const total = Math.max(0, Math.floor(Math.abs(Number(seconds) || 0)));
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (days) return hours ? `${days}d ${hours}h` : `${days}d`;
+  if (hours) return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+  if (minutes) return `${minutes}m`;
+  return `${total}s`;
+}
+
+export function measureRange(startPrice, endPrice, startTime = 0, endTime = 0, candleTimes = []) {
   const delta = endPrice - startPrice;
   const percent = startPrice === 0 ? 0 : delta / Math.abs(startPrice) * 100;
   const magnitude = Math.max(Math.abs(startPrice), Math.abs(endPrice));
   const precision = magnitude >= 1000 ? 2 : magnitude >= 1 ? 3 : 5;
-  return { delta, percent, precision, timeSpan: Math.abs(endTime - startTime) };
+  return { delta, percent, precision, timeSpan: Math.abs(endTime - startTime), barCount: countBarsBetween(candleTimes, startTime, endTime) };
 }
 
 export const FIB_EXTENSION_LEVELS = [0, 0.618, 1, 1.618, 2.618];
